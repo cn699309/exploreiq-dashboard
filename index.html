@@ -174,6 +174,24 @@
   .rank-badge.bronze { background: rgba(180,120,80,0.16);  color: #c4875a; }
   .app-name { font-weight: 500; color: var(--text); font-size: .82rem; }
   .publisher { color: var(--muted); font-size: .75rem; margin-top: 1px; }
+
+  /* ─── APP ICONS ─── */
+  .app-icon {
+    width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+    object-fit: cover; vertical-align: middle;
+  }
+  .app-icon-sm {
+    width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+    object-fit: cover; vertical-align: middle;
+  }
+  .app-cell { display: flex; align-items: center; gap: 10px; }
+  .app-card-icon {
+    width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+    object-fit: cover;
+  }
   .flag { font-size: 1rem; }
   .pill {
     display: inline-block; padding: 3px 9px;
@@ -1976,6 +1994,49 @@ function getFiltered(searchId, countryId, categoryId, sortId) {
   return data;
 }
 
+// ═══════════════════════════════════════════
+//  APP ICON FETCHING & CACHE
+// ═══════════════════════════════════════════
+const iconCache = {};
+let iconFetchInFlight = false;
+
+async function fetchAppIcons(data) {
+  // Collect IDs we don't have yet
+  const needed = data.filter(a => a.id && !iconCache[a.id]).map(a => a.id);
+  if (needed.length === 0 || iconFetchInFlight) return;
+  iconFetchInFlight = true;
+
+  // iTunes lookup supports up to 200 IDs at once
+  const batchSize = 150;
+  for (let i = 0; i < needed.length; i += batchSize) {
+    const batch = needed.slice(i, i + batchSize);
+    try {
+      const resp = await fetch(`https://itunes.apple.com/lookup?id=${batch.join(',')}&entity=software&country=us`);
+      const json = await resp.json();
+      if (json.results) {
+        json.results.forEach(r => {
+          if (r.trackId) {
+            // Use artworkUrl100 for crisp icons, replace size for 64px
+            iconCache[String(r.trackId)] = (r.artworkUrl100 || r.artworkUrl60 || '').replace('100x100', '128x128');
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Icon fetch failed:', e);
+    }
+  }
+  iconFetchInFlight = false;
+  // Re-render with icons
+  renderTable();
+  renderCards();
+}
+
+function getIconHtml(appId, cls) {
+  const url = iconCache[appId];
+  if (url) return `<img src="${url}" class="${cls}" alt="" loading="lazy" onerror="this.style.display='none'">`;
+  return `<div class="${cls}" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.6rem;">📱</div>`;
+}
+
 function renderTable() {
   const data = getFiltered('tableSearch','filterCountry','filterCategory',null);
   const tbody = document.getElementById('tableBody');
@@ -1995,11 +2056,16 @@ function renderTable() {
     return `<tr>
       <td><span class="rank-badge ${rankCls}">${a.rank}</span></td>
       <td>
-        <div class="app-name">${a.name}</div>
-        <div class="publisher">${a.publisher}</div>
-        <div style="margin-top:4px;display:flex;align-items:center;gap:6px;">
-          <span class="bar-inline" style="width:${barW}px"></span>
-          <span style="font-size:.72rem;color:var(--muted)">${fmt(a.downloads)}</span>
+        <div class="app-cell">
+          ${getIconHtml(a.id, 'app-icon')}
+          <div>
+            <div class="app-name">${a.name}</div>
+            <div class="publisher">${a.publisher}</div>
+            <div style="margin-top:4px;display:flex;align-items:center;gap:6px;">
+              <span class="bar-inline" style="width:${barW}px"></span>
+              <span style="font-size:.72rem;color:var(--muted)">${fmt(a.downloads)}</span>
+            </div>
+          </div>
         </div>
       </td>
       <td>${c} <span style="color:var(--muted);font-size:.82rem">${a.publisherCountry}</span></td>
@@ -2032,9 +2098,14 @@ function renderCards() {
     const typeColors = {AI:'var(--accent)',Social:'var(--pink)',Editing:'var(--teal)',Utility:'var(--amber)'};
     const typeColor = typeColors[a.type]||'var(--muted)';
     return `<div class="app-card" onclick="openCard(${a.rank})">
-      <div class="rank-num">RANK #${a.rank}</div>
-      <div class="app-title">${a.name}</div>
-      <div class="app-dev">${COUNTRY_FLAGS[a.publisherCountry]||'🌍'} ${a.publisher}</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+        ${getIconHtml(a.id, 'app-card-icon')}
+        <div>
+          <div class="rank-num">RANK #${a.rank}</div>
+          <div class="app-title">${a.name}</div>
+          <div class="app-dev">${COUNTRY_FLAGS[a.publisherCountry]||'🌍'} ${a.publisher}</div>
+        </div>
+      </div>
       <div class="metrics">
         <div class="metric"><div class="metric-val" style="color:var(--accent)">${fmt(a.downloads)}</div><div class="metric-lbl">Downloads WW</div></div>
         <div class="metric"><div class="metric-val" style="color:var(--teal)">${fmt(a.revenue,'rev')}</div><div class="metric-lbl">Revenue WW</div></div>
@@ -2323,6 +2394,7 @@ function switchCategory(cat, el) {
     switchTab('overview');
     renderTable();
     renderCards();
+    fetchAppIcons(currentData);
 
     // Reset collapsible states on category switch (charts only)
     document.querySelectorAll('.learn-cta.chart-learn').forEach(b => b.classList.remove('open'));
@@ -2545,6 +2617,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initFilters();
   renderTable();
   renderCards();
+  fetchAppIcons(currentData);
   initQuickPrompts();
   loadKey();
   initDraggable();
