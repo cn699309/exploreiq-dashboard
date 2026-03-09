@@ -815,9 +815,7 @@
         <span style="margin-left:auto;font-size:.65rem;color:var(--muted);font-weight:400;letter-spacing:.03em;text-transform:none;">Auto-generated from dataset</span>
       </div>
       <div id="keyInsights"></div>
-      <div class="learn-cta" onclick="toggleKeyInsights(this)">
-        <span class="sparkle">✦</span> What to learn <span class="arrow">▼</span>
-      </div>
+      <!-- What to learn button removed -->
     </div>
   </div>
 
@@ -1580,9 +1578,9 @@ function initCharts(data = currentData) {
     const metaDlPct = (metaDl/totalDl*100).toFixed(0);
 
     insightsHTML = `
-    <div class="insights-table collapsed">
+    <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
-      <div class="insights-col-header">What This Means for Your Next Viral App</div>
+      <div class="insights-col-header">Startup Angle</div>
 
       ${mkLeft('👥',"Meta's Iron Grip",
         `Meta owns ${metaApps} of the top 100 apps, capturing ${metaDlPct}% of downloads`,
@@ -1638,9 +1636,9 @@ function initCharts(data = currentData) {
     const bigTechPct = (googleMsDl/totalDl*100).toFixed(0);
 
     insightsHTML = `
-    <div class="insights-table collapsed">
+    <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
-      <div class="insights-col-header">What This Means for Your Next Viral App</div>
+      <div class="insights-col-header">Startup Angle</div>
 
       ${mkLeft('🤖','The AI Assistant Wars',
         `Claude, ChatGPT, Gemini, Grok, Copilot — AI owns the top 10`,
@@ -1691,9 +1689,9 @@ function initCharts(data = currentData) {
   } else {
     // ─── PHOTO & VIDEO INSIGHTS (default) ───
     insightsHTML = `
-    <div class="insights-table collapsed">
+    <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
-      <div class="insights-col-header">What This Means for Your Next Viral App</div>
+      <div class="insights-col-header">Startup Angle</div>
 
       ${mkLeft('📥','Download Concentration',
         `The top 3 apps own ${top3Pct}% of all downloads`,
@@ -2326,10 +2324,9 @@ function switchCategory(cat, el) {
     renderTable();
     renderCards();
 
-    // Reset collapsible states on category switch
-    document.querySelectorAll('.learn-cta').forEach(b => b.classList.remove('open'));
+    // Reset collapsible states on category switch (charts only)
+    document.querySelectorAll('.learn-cta.chart-learn').forEach(b => b.classList.remove('open'));
     document.querySelectorAll('.collapsible-insights').forEach(c => c.classList.remove('open'));
-    document.querySelectorAll('.insights-table').forEach(t => t.classList.add('collapsed'));
 
     // Update AI system prompt for new category
     chatHistory = [];
