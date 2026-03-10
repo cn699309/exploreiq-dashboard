@@ -964,14 +964,15 @@
 /* === END VISUAL ENHANCEMENTS === */
 
 
-/* === v21 OVERRIDE CSS === */
+/* === v22 OVERRIDE CSS === */
 .overview-kpi-row { display:none !important; }
 .hero-meta { flex-wrap:wrap; }
-.strategy-oneliner { font-size:1.25rem !important; font-weight:700 !important; line-height:1.35 !important; padding:14px 20px !important; margin-bottom:12px !important; }
+.strategy-oneliner { font-size:1.875rem !important; font-weight:700 !important; line-height:1.35 !important; padding:14px 20px !important; margin-bottom:12px !important; color:#ffffff !important; }
 .insights-table { display:grid; grid-template-columns:1fr 1fr; gap:0; }
 .insights-col-header { font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.4); padding:12px 18px 6px; }
 .insight-left, .insight-right { padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.04); }
 .insight-left .insight-title, .insight-right .sa-title { font-size:1.15rem !important; font-weight:700 !important; line-height:1.3 !important; }
+.insight-signal-title, .advice-title { font-size:1.2rem !important; font-weight:700 !important; line-height:1.3 !important; }
 .strat-title { font-size:1.15rem !important; font-weight:700 !important; }
 .learn-from-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .learn-card { background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px; }
@@ -981,9 +982,17 @@
 .hero { overflow:visible !important; }
 .cat-dropdown { z-index:1000; }
 *, *::before, *::after { -webkit-user-select:text !important; user-select:text !important; }
-.ai-disclosure-popup { pointer-events:auto !important; }
+.ai-disclosure { position:relative; }
+.ai-disclosure-popup { pointer-events:auto !important; position:absolute !important; top:100% !important; left:0 !important; margin-top:8px !important; z-index:9999 !important; }
 .ai-disclosure-popup .aid-prompt { user-select:text !important; -webkit-user-select:text !important; cursor:text; }
 .ai-disclosure:hover .ai-disclosure-popup { display:block !important; opacity:1 !important; visibility:visible !important; }
+.key-panel > .section-label:first-child,
+.key-panel > .key-input,
+.key-panel > .key-input + div,
+.key-panel > .divider:nth-of-type(1),
+.key-panel > .divider:nth-of-type(2),
+.key-panel > .section-label:nth-of-type(2),
+.key-panel > .model-select { display:none !important; }
 </style>
 </head>
 <body>
@@ -3543,6 +3552,36 @@ function setupScatterObserver() {
     window.switchCategory = function() { var r = window._origSwitchCategory.apply(this, arguments); setTimeout(applyV21Fixes, 1000); return r; };
   }
 }
+
+
+  // === v22 additions ===
+  // Hide Countries and Apps Analyzed stat pills
+  document.querySelectorAll(".stat-pill").forEach(function(p) {
+    var lbl = p.querySelector(".lbl");
+    if (lbl) {
+      var t = lbl.textContent.trim();
+      if (t === "Countries" || t === "Apps Analyzed") {
+        p.style.display = "none";
+      }
+    }
+  });
+
+  // Reformat learn card why-text to bullet list
+  document.querySelectorAll(".learn-card-why").forEach(function(el) {
+    var text = el.innerHTML;
+    if (text.indexOf("Why is this app growing?") === -1) return;
+    var content = text.replace(/<strong>Why is this app growing\?<\/strong>(<br\s*\/?>)*/g, "");
+    content = content.replace(/<br\s*\/?>/g, "");
+    var parts = content.split(/\s*\u00b7\s*(?=<strong>)/);
+    var bullets = "";
+    parts.forEach(function(part) {
+      var trimmed = part.trim();
+      if (trimmed && trimmed.length > 5) {
+        bullets += "<li style=\"margin-bottom:6px\">" + trimmed + "</li>";
+      }
+    });
+    el.innerHTML = "<strong style=\"display:block;margin-bottom:10px\">Why is this app growing?</strong><ul style=\"list-style:disc;padding-left:20px;margin:0\">" + bullets + "</ul>";
+  });
 </script>
 </body>
 </html>
