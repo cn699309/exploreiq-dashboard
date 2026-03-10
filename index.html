@@ -196,6 +196,19 @@
   .ai-disclosure-popup .aid-prompt { font-size: .72rem; color: var(--muted); line-height: 1.65; font-style: italic; }
   .ai-disclosure-popup .aid-note { font-size: .65rem; color: var(--muted2); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 
+  /* ─── INSTANT AGE TOOLTIP ─── */
+  .age-tip { position: relative; cursor: help; }
+  .age-tip .age-tip-popup { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--surface3); border: 1px solid var(--border2); border-radius: 6px; padding: 5px 10px; font-size: .7rem; color: var(--text); white-space: nowrap; z-index: 99; box-shadow: 0 4px 16px rgba(0,0,0,.4); pointer-events: none; }
+  .age-tip:hover .age-tip-popup { display: block; }
+
+  /* ─── TYPE TAG IN TABLE ─── */
+  .type-tag { display: inline-block; font-size: .62rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; letter-spacing: .03em; white-space: nowrap; }
+
+  /* ─── GROUP BY HEADER ─── */
+  .group-header-row td { background: var(--surface3) !important; padding: 10px 16px !important; border-bottom: 2px solid var(--accent) !important; font-weight: 700; font-size: .82rem; color: var(--accent); letter-spacing: .01em; }
+  .group-header-row td .group-count { font-weight: 400; font-size: .72rem; color: var(--muted); margin-left: 8px; }
+  .group-header-row td .group-stat { font-weight: 400; font-size: .68rem; color: var(--muted); margin-left: 12px; }
+
   /* ─── DATA SOURCE INFO ICONS ─── */
   .src-info { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: var(--surface3); border: 1px solid var(--border2); font-size: .55rem; color: var(--muted); cursor: help; margin-left: 4px; position: relative; vertical-align: middle; flex-shrink: 0; }
   .src-info:hover .src-info-popup { display: block; }
@@ -1003,6 +1016,14 @@
       <option value="Editing">Photo / Video Editing</option>
       <option value="Utility">Utility / Companion</option>
     </select>
+    <select class="filter" id="groupBy" onchange="renderTable()" style="margin-left:auto;">
+      <option value="">Group by: None</option>
+      <option value="type">Group by: App Type</option>
+      <option value="publisherCountry">Group by: Country</option>
+      <option value="foundedDecade">Group by: Founded Decade</option>
+      <option value="ageBucket">Group by: App Age</option>
+      <option value="revenueTier">Group by: Revenue Tier</option>
+    </select>
   </div>
   <div class="table-wrap">
     <table id="mainTable">
@@ -1010,6 +1031,7 @@
         <tr>
           <th onclick="sortTable('rank')">#<span class="sort-icon">↕</span></th>
           <th onclick="sortTable('name')">App<span class="sort-icon">↕</span></th>
+          <th onclick="sortTable('type')">Type<span class="sort-icon">↕</span></th>
           <th onclick="sortTable('revenue')">Revenue ↕<span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Sensor Tower</div><div class="src-item">AppMagic</div><div class="src-item">Appfigures</div></div></span></th>
           <th onclick="sortTable('downloads')">Downloads ↕<span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Sensor Tower</div><div class="src-item">AppMagic</div><div class="src-item">Appfigures</div></div></span></th>
           <th onclick="sortTable('releaseDate')">Age<span class="sort-icon">↕</span><span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">App Store (Apple)</div></div></span></th>
@@ -1017,7 +1039,7 @@
           <th onclick="sortTable('publisherCountry')">Country<span class="sort-icon">↕</span><span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Sensor Tower</div><div class="src-item">App Store (Apple)</div></div></span></th>
           <th>Employees<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">LinkedIn</div><div class="src-item">Wellfound</div><div class="src-item">Crunchbase</div></div></span></th>
           <th>Valuation<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Crunchbase</div><div class="src-item">PitchBook</div><div class="src-item">Google Finance</div></div></span></th>
-          <th>Founded<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Crunchbase</div><div class="src-item">LinkedIn</div></div></span></th>
+          <th>Co. Founded<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Year the parent company was founded</div><div class="src-item">Crunchbase</div><div class="src-item">LinkedIn</div></div></span></th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -2278,10 +2300,37 @@ function getIconHtml(appId, cls) {
   return `<div class="${cls}" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.6rem;">📱</div>`;
 }
 
+const TYPE_COLORS = {AI:'var(--accent)',Social:'#e8aaff',Editing:'var(--teal)',Utility:'var(--gold)',Messaging:'var(--blue)',Dating:'var(--rose)',VPN:'var(--green)',Office:'var(--muted)',Cloud:'var(--blue)'};
+
+function getGroupKey(a, groupBy) {
+  if (groupBy === 'type') return a.type || 'Other';
+  if (groupBy === 'publisherCountry') return a.publisherCountry;
+  if (groupBy === 'foundedDecade') {
+    const d = Math.floor(a.founded / 10) * 10;
+    return d ? `${d}s` : 'Unknown';
+  }
+  if (groupBy === 'ageBucket') {
+    const age = appAge(a.releaseDate);
+    if (age <= 1) return '0–1 years (New)';
+    if (age <= 3) return '2–3 years';
+    if (age <= 5) return '4–5 years';
+    if (age <= 10) return '6–10 years';
+    return '10+ years (Legacy)';
+  }
+  if (groupBy === 'revenueTier') {
+    if (a.revenue >= 10000000) return '$10M+ / month';
+    if (a.revenue >= 1000000) return '$1M–$10M / month';
+    if (a.revenue >= 100000) return '$100K–$1M / month';
+    return 'Under $100K / month';
+  }
+  return '';
+}
+
 function renderTable() {
   const data = getFiltered('tableSearch','filterCountry','filterCategory',null);
   const tbody = document.getElementById('tableBody');
   const maxDl = Math.max(...data.map(a=>a.downloads));
+  const groupBy = document.getElementById('groupBy')?.value || '';
 
   // Apply sort
   const sorted = [...data].sort((a,b)=>{
@@ -2290,10 +2339,10 @@ function renderTable() {
     return sortDir*String(va).localeCompare(String(vb));
   });
 
-  tbody.innerHTML = sorted.map(a=>{
+  const renderRow = (a) => {
     const rankCls = a.rank===1?'gold':a.rank===2?'silver':a.rank===3?'bronze':'';
-    const barW = Math.max(4, Math.round(a.downloads/maxDl*80));
     const c = COUNTRY_FLAGS[a.publisherCountry]||'🌍';
+    const tc = TYPE_COLORS[a.type]||'var(--muted)';
     return `<tr>
       <td><span class="rank-badge ${rankCls}">${a.rank}</span></td>
       <td>
@@ -2305,16 +2354,42 @@ function renderTable() {
           </div>
         </div>
       </td>
+      <td><span class="type-tag" style="color:${tc};background:${tc}18">${a.type}</span></td>
       <td style="font-weight:700;color:var(--teal)">${fmt(a.revenue,'rev')}</td>
       <td style="font-weight:700;color:var(--accent)">${fmt(a.downloads)}</td>
-      <td style="color:var(--muted);text-align:center;cursor:help;" title="Launched: ${a.releaseDate}">${appAge(a.releaseDate)}y</td>
+      <td><span class="age-tip" style="color:var(--muted);">${appAge(a.releaseDate)}y<span class="age-tip-popup">Launched: ${a.releaseDate}</span></span></td>
       <td style="font-size:.8rem">${a.company}</td>
       <td>${c} <span style="color:var(--muted);font-size:.82rem">${a.publisherCountry}</span></td>
       <td style="color:var(--muted);font-size:.78rem">${a.employees}</td>
       <td style="font-size:.75rem;color:var(--muted);max-width:160px">${a.valuation}</td>
       <td style="color:var(--muted);text-align:center">${a.founded}</td>
     </tr>`;
-  }).join('');
+  };
+
+  if (groupBy) {
+    // Group data
+    const groups = {};
+    sorted.forEach(a => {
+      const key = getGroupKey(a, groupBy);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(a);
+    });
+    // Sort groups: by total downloads descending
+    const sortedGroups = Object.entries(groups).sort((a,b) => {
+      const dlA = a[1].reduce((s,x) => s+x.downloads, 0);
+      const dlB = b[1].reduce((s,x) => s+x.downloads, 0);
+      return dlB - dlA;
+    });
+    const colCount = 11;
+    tbody.innerHTML = sortedGroups.map(([key, apps]) => {
+      const totalDl = apps.reduce((s,a) => s+a.downloads, 0);
+      const totalRev = apps.reduce((s,a) => s+a.revenue, 0);
+      const headerRow = `<tr class="group-header-row"><td colspan="${colCount}">${key}<span class="group-count">${apps.length} apps</span><span class="group-stat">${fmt(totalDl)} downloads · ${fmt(totalRev,'rev')} revenue</span></td></tr>`;
+      return headerRow + apps.map(renderRow).join('');
+    }).join('');
+  } else {
+    tbody.innerHTML = sorted.map(renderRow).join('');
+  }
   document.getElementById('tableCount').textContent = `Showing ${sorted.length} of ${currentData.length} apps`;
 }
 
