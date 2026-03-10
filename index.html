@@ -3470,7 +3470,7 @@ function applyV21Fixes() {
       if (!val) return;
       var pill = document.createElement("span");
       pill.className = "stat-pill kpi-migrated";
-      pill.innerHTML = '<span class="stat-label">' + txt + '</span><span class="stat-value">' + val.textContent.trim() + '</span>';
+      pill.innerHTML = '<div class="val">' + val.textContent.trim() + '</div><div class="lbl">' + txt + '</div>';
       heroMeta.appendChild(pill);
     });
   }
