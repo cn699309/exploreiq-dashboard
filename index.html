@@ -3268,21 +3268,23 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initDraggable();
 });
 
+
 // === UI FIX: Add strategy one-liner to Key Insights ===
 function addStrategyOneliner() {
-  var ig = document.querySelector(".insight-grid");
-  if (!ig) return false;
-  var p = ig.closest(".drag-section") || ig.parentElement;
-  if (!p || p.querySelector(".strategy-oneliner")) return true;
+  var isw = document.querySelector(".insights-scroll-wrap");
+  if (!isw) return false;
+  var card = isw.parentElement;
+  if (!card || card.querySelector(".strategy-oneliner")) return true;
+  var ct = card.querySelector(".card-title");
+  if (!ct) return false;
   var cat = (typeof currentCategory !== "undefined") ? currentCategory : "photo";
-  var s = { photo: "Own one AI-powered moment so stunning users share it \u2014 then expand from there.", social: "Build a new social verb for one underserved tribe \u2014 community is your moat.", productivity: "Go vertical: own one painful workflow and make AI do it 10x faster." };
+  var s = { photo: "Own one AI-powered moment so stunning users share it \u2014 then expand from there.", photo_video: "Own one AI-powered moment so stunning users share it \u2014 then expand from there.", social: "Build a new social verb for one underserved tribe \u2014 community is your moat.", social_networking: "Build a new social verb for one underserved tribe \u2014 community is your moat.", productivity: "Go vertical: own one painful workflow and make AI do it 10x faster." };
   var el = document.createElement("div");
   el.className = "strategy-oneliner";
-  el.style.cssText = "padding:14px 20px;margin-bottom:12px;border-radius:10px;font-size:1.05rem;font-weight:600;color:var(--accent);line-height:1.4;";
+  el.style.cssText = "padding:10px 20px;margin-bottom:8px;font-size:1.05rem;font-weight:600;color:var(--accent);line-height:1.4;";
   el.textContent = s[cat] || s.photo;
-  var sl = p.querySelector(".section-label");
-  if (sl) { sl.parentElement.insertBefore(el, sl.nextSibling); return true; }
-  return false;
+  ct.after(el);
+  return true;
 }
 window.addEventListener("load", function() {
   var t=0, iv=setInterval(function(){if(addStrategyOneliner()||t>20)clearInterval(iv);t++;},300);
@@ -3293,6 +3295,7 @@ if (_oSC) window.switchCategory = function() {
   var ex=document.querySelector(".strategy-oneliner"); if(ex) ex.remove();
   setTimeout(function(){var t=0,iv=setInterval(function(){if(addStrategyOneliner()||t>20)clearInterval(iv);t++;},300);},500);
 };
+
 </script>
 </body>
 </html>
