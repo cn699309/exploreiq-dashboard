@@ -1756,11 +1756,28 @@ function initCharts(data = currentData) {
     const socialNewHighRankers = data.filter(a => a.releaseDate >= '2022-01-01' && a.rank <= 30).sort((a,b) => a.rank - b.rank);
     const socialSmallList = socialSmallTeams.slice(0,4).map(a=>`${a.name} (${a.employees} emp)`).join(', ');
     const socialNewList = socialNewHighRankers.slice(0,4).map(a=>`${a.name} (#${a.rank})`).join(', ');
+    // Micro-teams: under 50 employees in social
+    const socialMicroTeams = data.filter(a => {
+      const emp = a.employees.replace(/[^0-9\-~]/g,'').replace('~','');
+      const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
+      return !isNaN(maxEmp) && maxEmp <= 50 && a.revenue >= 200000;
+    }).sort((a,b) => b.revenue - a.revenue);
+    const socialMicroList = socialMicroTeams.slice(0,5).map(a=>`${a.name} (${a.employees} emp, ${fmt(a.revenue,'rev')})`).join(', ');
+    const socialMicroRev = socialMicroTeams.reduce((s,a)=>s+a.revenue,0);
 
     insightsHTML = `
     <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
       <div class="insights-col-header">Startup Angle</div>
+
+      ${mkLeft('🔥','Micro-Teams Thriving in Social',
+        `${socialMicroTeams.length} apps with <50 employees earn $200K+/month — ${fmt(socialMicroRev,'rev')} combined`,
+        `Tiny teams are building real social businesses: <strong>${socialMicroList}</strong>. These 5–50 person companies prove you don't need Meta's 78K employees to build a top-100 social app. They win by serving one community with obsessive depth.`
+      )}
+      ${mkRight(
+        `The 20-Person Social Company`,
+        `The most capital-efficient social apps are built by teams of 20–50. <em>Telegram runs a global messaging empire with ~50 people. Signal protects millions with ~40.</em> Locket reinvented photo sharing with 20–30. The pattern: <strong>pick one interaction, perfect it, and let the community do the distribution.</strong> You don't need 1,000 engineers — you need 20 people who deeply understand one tribe.`
+      )}
 
       ${mkLeft('🏆','David vs Goliath: Small Teams Win',
         `${socialSmallTeams.length} apps with <500 employees reach 500K+ downloads`,
@@ -1841,11 +1858,28 @@ function initCharts(data = currentData) {
     const prodNewHighRankers = data.filter(a => a.releaseDate >= '2022-01-01' && a.rank <= 30).sort((a,b) => a.rank - b.rank);
     const prodSmallList = prodSmallTeams.slice(0,4).map(a=>`${a.name} (${a.employees} emp, ${fmt(a.revenue,'rev')})`).join(', ');
     const prodNewList = prodNewHighRankers.slice(0,4).map(a=>`${a.name} (#${a.rank})`).join(', ');
+    // Micro-teams: under 50 employees in productivity
+    const prodMicroTeams = data.filter(a => {
+      const emp = a.employees.replace(/[^0-9\-~]/g,'').replace('~','');
+      const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
+      return !isNaN(maxEmp) && maxEmp <= 50 && a.revenue >= 200000;
+    }).sort((a,b) => b.revenue - a.revenue);
+    const prodMicroList = prodMicroTeams.slice(0,5).map(a=>`${a.name} (${a.employees} emp, ${fmt(a.revenue,'rev')})`).join(', ');
+    const prodMicroRev = prodMicroTeams.reduce((s,a)=>s+a.revenue,0);
 
     insightsHTML = `
     <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
       <div class="insights-col-header">Startup Angle</div>
+
+      ${mkLeft('🔥','Micro-Teams Building Real Businesses',
+        `${prodMicroTeams.length} apps with <50 employees earn $200K+/month — ${fmt(prodMicroRev,'rev')} combined`,
+        `Tiny teams competing with Google and Microsoft: <strong>${prodMicroList}</strong>. These 5–50 person companies prove you can build a top-100 productivity app without hundreds of engineers. The key: solve one painful workflow completely.`
+      )}
+      ${mkRight(
+        `The Solo-to-50 Playbook`,
+        `Widgetsmith was built by <em>one person</em> and makes $1.5M/month. Brick has 20–30 people and charges $4.99/month to block distractions. Blank Spaces has 5–10 people. <strong>The pattern: productivity apps that solve one specific annoyance don't need large teams.</strong> Ship fast, charge premium, and let AI handle the features you'd otherwise need 50 more engineers to build.`
+      )}
 
       ${mkLeft('🏆','Small Teams Generating Big Revenue',
         `${prodSmallTeams.length} apps with <500 employees earn $200K+ monthly`,
@@ -1923,11 +1957,28 @@ function initCharts(data = currentData) {
     const revenuePerDl = [...data].filter(a=>a.downloads>0&&a.revenue>0).map(a=>({...a, rpd: a.revenue/a.downloads})).sort((a,b)=>b.rpd-a.rpd);
     const smallTeamList = smallTeamStars.slice(0,5).map(a=>`${a.name} (${a.employees} emp, ${fmt(a.revenue,'rev')})`).join(', ');
     const newHighList = newHighRankers.slice(0,5).map(a=>`${a.name} (#${a.rank}, launched ${a.releaseDate.slice(0,4)})`).join(', ');
+    // Micro-teams: under 50 employees
+    const microTeamStars = data.filter(a => {
+      const emp = a.employees.replace(/[^0-9\-~]/g,'').replace('~','');
+      const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
+      return !isNaN(maxEmp) && maxEmp <= 50 && a.revenue >= 200000;
+    }).sort((a,b) => b.revenue - a.revenue);
+    const microTeamList = microTeamStars.slice(0,5).map(a=>`${a.name} (${a.employees} emp, ${fmt(a.revenue,'rev')})`).join(', ');
+    const microTotalRev = microTeamStars.reduce((s,a)=>s+a.revenue,0);
 
     insightsHTML = `
     <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
       <div class="insights-col-header">Startup Angle</div>
+
+      ${mkLeft('🔥','Micro-Teams Punching Above Weight',
+        `${microTeamStars.length} apps with <50 employees earn $200K+/month — ${fmt(microTotalRev,'rev')} combined`,
+        `The most exciting signal for startups: <strong>${microTeamList}</strong>. These are not side projects — they're real businesses built by tiny teams generating serious monthly revenue in a category dominated by ByteDance and Meta.`
+      )}
+      ${mkRight(
+        `The 5–50 Person Sweet Spot`,
+        `The data reveals a clear pattern: <em>teams of 5–50 people are the most capital-efficient app builders in the top 100.</em> They skip the coordination tax of larger orgs, move faster than solo devs, and use AI to multiply output 10×. <strong>If you're a 10-person team making $1M/month, you're not small — you're perfectly sized.</strong> FaceApp proves a 50-person team can generate $4M/month.`
+      )}
 
       ${mkLeft('🏆','Small Teams, Big Revenue',
         `${smallTeamStars.length} apps with <500 employees generate $500K+ revenue`,
@@ -2014,27 +2065,32 @@ function initOverviewKpis(data = currentData) {
   const aiApps = data.filter(a => a.type === 'AI');
   const countries = [...new Set(data.map(a=>a.publisherCountry))].length;
 
+  // Micro-teams (<50 employees)
+  const microTeams = data.filter(a => { const e=a.employees.replace(/[^0-9\-~]/g,'').replace('~',''); const m=e.includes('-')?parseInt(e.split('-')[1]):parseInt(e); return !isNaN(m) && m<=50; });
+  const microRevTotal = microTeams.reduce((s,a)=>s+a.revenue,0);
+  const microWithRev = microTeams.filter(a=>a.revenue>=200000);
+
   // Category-specific KPIs
   let kpis = [];
   if (currentCategory === 'social') {
     const metaApps = data.filter(a=>a.company&&a.company.includes('Meta'));
     const datingApps = data.filter(a=>a.type==='Dating');
     kpis = [
-      { val: fmt(totalDl), lbl: 'Total Downloads', sub: `${data.length} apps tracked`, color: 'var(--accent)' },
+      { val: microTeams.length+'', lbl: 'Micro Teams (<50)', sub: `${microWithRev.length} earning $200K+/mo`, color: 'var(--accent)' },
       { val: metaApps.length+'', lbl: 'Meta-owned Apps', sub: `${(metaApps.reduce((s,a)=>s+a.downloads,0)/totalDl*100).toFixed(0)}% of downloads`, color: 'var(--rose)' },
       { val: datingApps.length+'', lbl: 'Dating Apps', sub: 'Most fragmented sub-category', color: 'var(--gold)' },
       { val: newApps.length+'', lbl: 'New (2022+)', sub: 'Gen Z is reshuffling social', color: 'var(--teal)' },
     ];
   } else if (currentCategory === 'productivity') {
     kpis = [
-      { val: fmt(totalDl), lbl: 'Total Downloads', sub: `${data.length} apps tracked`, color: 'var(--accent)' },
+      { val: microTeams.length+'', lbl: 'Micro Teams (<50)', sub: `${microWithRev.length} earning $200K+/mo`, color: 'var(--accent)' },
       { val: aiApps.length+'', lbl: 'AI-Powered Apps', sub: 'AI owns the top of the charts', color: 'var(--accent)' },
       { val: '$'+avgRpd.toFixed(2), lbl: 'Avg Rev/Download', sub: 'Workflow tools charge 5–10×', color: 'var(--teal)' },
       { val: newApps.length+'', lbl: 'New (2022+)', sub: 'AI-native displacing incumbents', color: 'var(--gold)' },
     ];
   } else {
     kpis = [
-      { val: fmt(totalDl), lbl: 'Total Downloads', sub: `${data.length} apps tracked`, color: 'var(--accent)' },
+      { val: microTeams.length+'', lbl: 'Micro Teams (<50)', sub: `${microWithRev.length} earning $200K+/mo`, color: 'var(--accent)' },
       { val: smallTeams.length+'', lbl: 'Small Teams (<500)', sub: 'Lean teams thriving in top 100', color: 'var(--teal)' },
       { val: '$'+avgRpd.toFixed(2), lbl: 'Avg Rev/Download', sub: 'Best-in-class exceed $5/dl', color: 'var(--gold)' },
       { val: newApps.length+'', lbl: 'New (2022+)', sub: 'Market window is still open', color: 'var(--rose)' },
@@ -2378,6 +2434,7 @@ function initLearnFrom(data = currentData) {
     const emp = a.employees.replace(/[^0-9\-]/g,'');
     const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
     const isSmall = maxEmp <= 1000;
+    const isMicro = maxEmp <= 50;
     const isNew = a.releaseDate >= '2018-01-01';
     const hasRevenue = a.revenue >= 500000;
     const goodRank = a.rank <= 50;
@@ -2386,11 +2443,13 @@ function initLearnFrom(data = currentData) {
     // Composite score: prioritize small+new+high-performing
     let score = 0;
     if (isSmall) score += 30;
+    if (isMicro) score += 25; // extra bonus for <50 employees
     if (isNew) score += 20;
     if (hasRevenue) score += 25;
     if (goodRank) score += 15;
     score += rpd * 10; // reward revenue efficiency
     score += (isSmall && hasRevenue) ? 20 : 0; // bonus for small team with revenue
+    score += (isMicro && hasRevenue) ? 25 : 0; // extra bonus for micro-team with revenue
     score += (isNew && goodRank) ? 15 : 0; // bonus for new and high ranking
     score -= a.rank * 0.1; // slight preference for higher rank
     return { ...a, score, maxEmp, age, rpd };
@@ -2404,10 +2463,12 @@ function initLearnFrom(data = currentData) {
     photo_video: [
       (a) => {
         const reasons = [];
-        if (a.maxEmp <= 500) reasons.push(`operates with just <em>${a.employees}</em> employees — proving lean teams can dominate`);
+        if (a.maxEmp <= 50) reasons.push(`built by a <strong>micro-team of just ${a.employees}</strong> employees — exactly the scale a startup can replicate`);
+        else if (a.maxEmp <= 500) reasons.push(`operates with just <em>${a.employees}</em> employees — proving lean teams can dominate`);
         if (a.releaseDate >= '2020-01-01') reasons.push(`launched in <em>${a.releaseDate.slice(0,4)}</em> and already ranks <strong>#${a.rank}</strong>`);
         if (a.rpd > 1) reasons.push(`earns <strong>${fmt(a.revenue,'rev')}</strong> on ${fmt(a.downloads)} downloads — ${(a.rpd).toFixed(1)}× revenue-per-download`);
         if (a.revenue >= 1000000) reasons.push(`generates <strong>${fmt(a.revenue,'rev')}/month</strong> revenue, outperforming many older incumbents`);
+        if (a.maxEmp <= 50 && a.revenue >= 500000) reasons.push(`<strong>revenue-per-employee of ${fmt(Math.round(a.revenue/Math.max(a.maxEmp,1)),'rev')}/month</strong> — extraordinary capital efficiency`);
         if (a.type === 'AI') reasons.push(`rides the <strong>AI wave</strong> — the fastest-growing segment in the category`);
         return reasons.length > 0 ? reasons.join('. ') + '.' : `Ranks <strong>#${a.rank}</strong> with an efficient growth model that startups can replicate.`;
       },
