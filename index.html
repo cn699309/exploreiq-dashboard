@@ -194,10 +194,12 @@
   /* ─── AI DISCLOSURE ICONS ─── */
   .ai-disclosure { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(196,168,244,0.1); border: 1px solid rgba(196,168,244,0.2); font-size: .6rem; line-height: 1; color: var(--accent); cursor: help; margin-left: 6px; position: relative; vertical-align: middle; flex-shrink: 0; text-align: center; }
   .ai-disclosure:hover .ai-disclosure-popup { display: block; }
-  .ai-disclosure-popup { display: none; position: absolute; top: calc(100% + 8px); left: 0; background: var(--surface3); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 16px; min-width: 320px; max-width: 420px; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+  .ai-disclosure-popup { display: none; position: fixed; background: var(--surface3); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 16px; min-width: 320px; max-width: 420px; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
   .ai-disclosure-popup .aid-title { font-size: .62rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-  .ai-disclosure-popup .aid-prompt { font-size: .72rem; color: var(--muted); line-height: 1.65; font-style: italic; }
-  .ai-disclosure-popup .aid-note { font-size: .65rem; color: var(--muted2); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .ai-disclosure-popup .aid-prompt { font-size: .72rem; color: var(--muted); line-height: 1.65; font-style: italic; text-align: left; text-transform: none; }
+  .ai-disclosure-popup .aid-note { font-size: .65rem; color: var(--muted2); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); text-transform: none; text-align: left; }
+  .aid-copy-btn { display: inline-flex; align-items: center; gap: 4px; font-size: .6rem; padding: 3px 8px; border-radius: 5px; background: rgba(196,168,244,0.1); border: 1px solid rgba(196,168,244,0.2); color: var(--accent); cursor: pointer; margin-top: 8px; transition: background .15s; font-weight: 600; letter-spacing: .03em; text-transform: none; }
+  .aid-copy-btn:hover { background: rgba(196,168,244,0.2); }
 
   /* ─── INSTANT AGE TOOLTIP ─── */
   .age-tip { position: relative; cursor: help; }
@@ -476,11 +478,10 @@
   .stat-pill.clickable .lbl { text-decoration: underline dotted rgba(236,236,240,0.25); text-underline-offset: 3px; }
 
   .stat-tooltip {
-    display: none; position: absolute; z-index: 999;
+    display: none; position: fixed; z-index: 9999;
     background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px;
     padding: 12px 16px; min-width: 220px; max-width: 340px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5); top: calc(100% + 8px); left: 50%;
-    transform: translateX(-50%); pointer-events: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: none;
   }
   .stat-pill.clickable:hover .stat-tooltip { display: block; }
   .stat-tooltip-title {
@@ -630,8 +631,8 @@
     text-transform: uppercase; color: var(--muted2); margin-bottom: 4px;
   }
   .insight-signal-title {
-    font-size: .88rem; font-weight: 650; color: var(--text);
-    line-height: 1.3; margin-bottom: 6px;
+    font-size: 1.02rem; font-weight: 700; color: var(--accent);
+    line-height: 1.3; margin-bottom: 8px;
     font-family: 'Space Grotesk', sans-serif;
   }
   .insight-signal-body { font-size: .79rem; color: var(--muted); line-height: 1.7; }
@@ -801,10 +802,10 @@
   /* ─── APP LIST TOOLTIP (clickable) ─── */
   .app-list-tip { position: relative; border-bottom: 1px dashed var(--accent); cursor: pointer; display: inline; color: var(--accent); font-weight: 600; }
   .app-list-tip .alt-popup {
-    display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    display: none; position: fixed;
     background: var(--surface3); border: 1px solid var(--border2); border-radius: 10px;
     padding: 10px 14px; min-width: 220px; max-width: 380px; max-height: 320px; overflow-y: auto;
-    z-index: 999; font-size: .74rem; color: var(--text); line-height: 1.5;
+    z-index: 9999; font-size: .74rem; color: var(--text); line-height: 1.5;
     box-shadow: 0 8px 32px rgba(0,0,0,.5); pointer-events: auto;
   }
   .app-list-tip:hover .alt-popup { display: block; }
@@ -2083,7 +2084,22 @@ function initOverviewKpis(data = currentData) {
     ];
   }
 
-  el.innerHTML = kpis.map(k => `
+  
+  // Category-specific summary highlight
+  let summary = '';
+  if (currentCategory === 'social') {
+    summary = '<strong>' + microWithRev.length + ' micro-teams</strong> earning $200K+/mo prove you don\'t need Meta\'s scale. Invent a <strong>new social verb</strong> for one underserved tribe.';
+  } else if (currentCategory === 'productivity') {
+    summary = '<strong>' + aiApps.length + ' AI-powered apps</strong> dominate the charts, but horizontal AI is a bloodbath. Go <strong>vertical</strong>: own one painful workflow and make AI do it 10x faster.';
+  } else {
+    summary = '<strong>' + microWithRev.length + ' micro-teams</strong> (<50 people) earn $200K+/mo in a category dominated by giants. The key: own <strong>one AI-powered magic moment</strong> so stunning users screenshot and share.';
+  }
+
+el.innerHTML = `
+    <div style="background:linear-gradient(135deg, rgba(196,168,244,0.08), rgba(92,232,212,0.05)); border:1px solid rgba(196,168,244,0.15); border-radius:14px; padding:18px 22px; margin-bottom:14px; display:flex; align-items:flex-start; gap:12px;">
+      <span style="font-size:1.1rem; flex-shrink:0; margin-top:1px;">&#128161;</span>
+      <div style="font-size:.85rem; line-height:1.6; color:var(--text);">${summary}</div>
+    </div>` + kpis.map(k => `
     <div class="overview-kpi">
       <div class="kpi-val" style="color:${k.color}">${k.val}</div>
       <div class="kpi-lbl">${k.lbl}</div>
@@ -2456,34 +2472,28 @@ function initLearnFrom(data = currentData) {
   // ── Growth analysis: WHY they're growing ──
   const analyze = (a) => {
     const parts = [];
-    // Timing analysis
     if (a.isRecent) {
-      const launchYear = a.releaseDate.slice(0,4);
-      const ageMonths = Math.round((new Date() - new Date(a.releaseDate)) / (1000*60*60*24*30));
-      parts.push(`<strong>Timing:</strong> Launched in ${launchYear} (${ageMonths < 36 ? 'just ' + ageMonths + ' months ago' : a.age + ' years ago'}) and already ranks <strong>#${a.rank}</strong> — proving the market window is still open for new entrants`);
+      parts.push(`<strong>Timing:</strong> Launched ${a.releaseDate.slice(0,4)}, already rank <strong>#${a.rank}</strong> — market window is open`);
     } else {
-      parts.push(`<strong>Timing:</strong> Launched in ${a.releaseDate.slice(0,4)} — an established player that maintains relevance through continuous reinvention`);
+      parts.push(`<strong>Timing:</strong> Est. ${a.releaseDate.slice(0,4)} — stays relevant through reinvention`);
     }
-    // Team & execution analysis
     if (a.isMicro) {
       const rpe = a.maxEmp > 0 ? fmt(Math.round(a.revenue / a.maxEmp), 'rev') : 'N/A';
-      parts.push(`<strong>Lean execution:</strong> Built by a <strong>micro-team of ${a.employees}</strong> employees generating <strong>${fmt(a.revenue,'rev')}/month</strong> — that's <strong>${rpe} revenue per employee</strong>, an extraordinary efficiency that proves you don't need hundreds of engineers`);
+      parts.push(`<strong>Lean team:</strong> <strong>${a.employees} employees</strong> → <strong>${fmt(a.revenue,'rev')}/mo</strong> (${rpe}/employee)`);
     } else if (a.maxEmp <= 500) {
-      parts.push(`<strong>Lean execution:</strong> Operates with just <em>${a.employees}</em> employees — proving a focused team can compete against companies 10–100× larger`);
+      parts.push(`<strong>Lean team:</strong> Just <em>${a.employees}</em> employees competing with 10–100× larger orgs`);
     }
-    // Product focus analysis
     if (a.rpd > 1) {
-      parts.push(`<strong>Product focus:</strong> Earns <strong>${(a.rpd).toFixed(1)}× revenue per download</strong> — this isn't a growth-hack app, it's a product users deeply value and pay premium prices for`);
+      parts.push(`<strong>Monetization:</strong> <strong>${(a.rpd).toFixed(1)}× rev/download</strong> — users pay premium`);
     } else if (a.revenue >= 500000) {
-      parts.push(`<strong>Product focus:</strong> Generates <strong>${fmt(a.revenue,'rev')}/month</strong> revenue on ${fmt(a.downloads)} downloads — strong monetization signals a product with real user value`);
+      parts.push(`<strong>Monetization:</strong> <strong>${fmt(a.revenue,'rev')}/mo</strong> on ${fmt(a.downloads)} downloads`);
     }
-    // Type-specific insight
-    if (a.type === 'AI') parts.push(`<strong>AI leverage:</strong> Rides the generative AI wave — the fastest-growing segment — using AI as a core product differentiator, not just a feature bolt-on`);
-    else if (a.type === 'Editing') parts.push(`<strong>Creator economy:</strong> Taps into the massive creator tool market where users willingly pay for tools that improve their content output`);
-    else if (a.type === 'Social') parts.push(`<strong>Community moat:</strong> Built a loyal community that serves as both product and distribution — the hardest moat to replicate`);
-    else if (a.type === 'Utility') parts.push(`<strong>Utility stickiness:</strong> Solves a recurring need that keeps users coming back daily — high retention without high marketing spend`);
-    else if (a.type === 'Messaging') parts.push(`<strong>Network effect:</strong> Benefits from viral adoption where each new user increases value for existing ones — the strongest growth engine in mobile`);
-    return parts.join('. <br><br>') + '.';
+    if (a.type === 'AI') parts.push(`<strong>AI-native:</strong> Core AI differentiator, not a bolt-on`);
+    else if (a.type === 'Editing') parts.push(`<strong>Creator tool:</strong> Users pay for better content output`);
+    else if (a.type === 'Social') parts.push(`<strong>Community moat:</strong> Community = product + distribution`);
+    else if (a.type === 'Utility') parts.push(`<strong>Daily utility:</strong> High retention, low marketing cost`);
+    else if (a.type === 'Messaging') parts.push(`<strong>Network effect:</strong> Each new user adds value for all`);
+    return parts.join(' · ');
   };
 
   const colors = [
@@ -3173,7 +3183,72 @@ document.addEventListener('mouseenter', function(e) {
   popup.style.left = left + 'px';
 }, true);
 
+
+// Position all fixed popups (stat-tooltip, ai-disclosure-popup, alt-popup)
+document.addEventListener('mouseenter', function(e) {
+  const statPill = e.target.closest('.stat-pill.clickable');
+  if (statPill) {
+    const tooltip = statPill.querySelector('.stat-tooltip');
+    if (tooltip) {
+      const rect = statPill.getBoundingClientRect();
+      tooltip.style.left = (rect.left + rect.width/2 - 170) + 'px';
+      tooltip.style.top = (rect.bottom + 8) + 'px';
+    }
+  }
+  const aiDisc = e.target.closest('.ai-disclosure');
+  if (aiDisc) {
+    const popup = aiDisc.querySelector('.ai-disclosure-popup');
+    if (popup) {
+      const rect = aiDisc.getBoundingClientRect();
+      let left = rect.left;
+      let top = rect.bottom + 8;
+      if (left + 420 > window.innerWidth) left = window.innerWidth - 430;
+      if (left < 8) left = 8;
+      if (top + 300 > window.innerHeight) top = rect.top - 300;
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+    }
+  }
+  const appTip = e.target.closest('.app-list-tip');
+  if (appTip) {
+    const popup = appTip.querySelector('.alt-popup');
+    if (popup) {
+      const rect = appTip.getBoundingClientRect();
+      let left = rect.left + rect.width/2 - 190;
+      if (left < 8) left = 8;
+      if (left + 380 > window.innerWidth) left = window.innerWidth - 388;
+      let top = rect.top - 320 - 8;
+      if (top < 8) top = rect.bottom + 8;
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+    }
+  }
+}, true);
+
+// Copy prompt button handler
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.aid-copy-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  const pr = btn.closest('.ai-disclosure-popup').querySelector('.aid-prompt');
+  if (pr) {
+    navigator.clipboard.writeText(pr.textContent.replace(/^"|"$/g,'').trim()).then(()=>{
+      btn.textContent = 'Copied!';
+      setTimeout(()=> btn.textContent = 'Copy prompt', 1500);
+    });
+  }
+});
+
 window.addEventListener('DOMContentLoaded', ()=>{
+    // Add copy buttons to all AI disclosure popups
+  document.querySelectorAll('.ai-disclosure-popup').forEach(popup => {
+    if (!popup.querySelector('.aid-copy-btn')) {
+      const btn = document.createElement('div');
+      btn.className = 'aid-copy-btn';
+      btn.textContent = 'Copy prompt';
+      popup.appendChild(btn);
+    }
+  });
   initHeroStats();
   initOverviewKpis();
   initCharts();
