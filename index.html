@@ -964,7 +964,7 @@
 /* === END VISUAL ENHANCEMENTS === */
 
 
-/* === v22 OVERRIDE CSS === */
+/* === v22b OVERRIDE CSS === */
 .overview-kpi-row { display:none !important; }
 .hero-meta { flex-wrap:wrap; }
 .strategy-oneliner { font-size:1.875rem !important; font-weight:700 !important; line-height:1.35 !important; padding:14px 20px !important; margin-bottom:12px !important; color:#ffffff !important; }
@@ -3554,34 +3554,90 @@ function setupScatterObserver() {
 }
 
 
-  // === v22 additions ===
-  // Hide Countries and Apps Analyzed stat pills
-  document.querySelectorAll(".stat-pill").forEach(function(p) {
-    var lbl = p.querySelector(".lbl");
-    if (lbl) {
-      var t = lbl.textContent.trim();
-      if (t === "Countries" || t === "Apps Analyzed") {
-        p.style.display = "none";
-      }
+  // === v22b additions ===
+function v22bHidePills(){
+  document.querySelectorAll(".stat-pill").forEach(function(p){
+    var lbl=p.querySelector(".lbl");
+    if(lbl){
+      var t=lbl.textContent.trim();
+      if(t==="Countries"||t==="Apps Analyzed") p.style.display="none";
     }
   });
-
-  // Reformat learn card why-text to bullet list
-  document.querySelectorAll(".learn-card-why").forEach(function(el) {
-    var text = el.innerHTML;
-    if (text.indexOf("Why is this app growing?") === -1) return;
-    var content = text.replace(/<strong>Why is this app growing\?<\/strong>(<br\s*\/?>)*/g, "");
-    content = content.replace(/<br\s*\/?>/g, "");
-    var parts = content.split(/\s*\u00b7\s*(?=<strong>)/);
-    var bullets = "";
-    parts.forEach(function(part) {
-      var trimmed = part.trim();
-      if (trimmed && trimmed.length > 5) {
-        bullets += "<li style=\"margin-bottom:6px\">" + trimmed + "</li>";
-      }
-    });
-    el.innerHTML = "<strong style=\"display:block;margin-bottom:10px\">Why is this app growing?</strong><ul style=\"list-style:disc;padding-left:20px;margin:0\">" + bullets + "</ul>";
+}
+var v22bInsightOrder={
+  "photo":["AI-powered","<50 employees earn","launched in 2023 or later","China places","top 3 apps own"],
+  "social":["launched 2023+","messaging apps in the top","Meta owns","<50 employees earn","Chinese apps","dating apps in the top"]
+};
+function v22bDetectCategory(){
+  var el=document.querySelector(".hero-title");
+  if(!el) return "";
+  var t=el.textContent.toLowerCase();
+  if(t.indexOf("photo")!==-1) return "photo";
+  if(t.indexOf("social")!==-1) return "social";
+  return "";
+}
+function v22bReorderInsights(){
+  var cat=v22bDetectCategory();
+  var order=v22bInsightOrder[cat];
+  if(!order) return;
+  var table=document.querySelector(".insights-table");
+  if(!table) return;
+  var lefts=Array.from(table.querySelectorAll(".insight-left"));
+  var rights=Array.from(table.querySelectorAll(".insight-right"));
+  if(lefts.length<2) return;
+  var pairs=[];
+  for(var i=0;i<lefts.length;i++) pairs.push({left:lefts[i],right:rights[i]||null,text:lefts[i].textContent});
+  var ordered=[],used={};
+  order.forEach(function(snippet){
+    for(var j=0;j<pairs.length;j++){
+      if(!used[j]&&pairs[j].text.indexOf(snippet)!==-1){ordered.push(j);used[j]=true;break;}
+    }
   });
+  var colHeaders=table.querySelectorAll(".insights-col-header");
+  var frag=document.createDocumentFragment();
+  colHeaders.forEach(function(h){frag.appendChild(h);});
+  ordered.forEach(function(i){
+    pairs[i].left.style.display="";
+    frag.appendChild(pairs[i].left);
+    if(pairs[i].right){pairs[i].right.style.display="";frag.appendChild(pairs[i].right);}
+  });
+  for(var k=0;k<pairs.length;k++){
+    if(!used[k]){
+      pairs[k].left.style.display="none";
+      frag.appendChild(pairs[k].left);
+      if(pairs[k].right){pairs[k].right.style.display="none";frag.appendChild(pairs[k].right);}
+    }
+  }
+  while(table.firstChild)table.removeChild(table.firstChild);
+  table.appendChild(frag);
+}
+function v22bFixLearnCards(){
+  document.querySelectorAll(".learn-card-why").forEach(function(el){
+    var text=el.innerHTML;
+    if(text.indexOf("Why is this app growing?")===-1) return;
+    if(text.indexOf("<ul")!==-1) return;
+    var content=text.replace(/<strong>Why is this app growing\?<\/strong>(<br\s*\/?>)*/g,"");
+    content=content.replace(/<br\s*\/?>/g,"\u00b7");
+    var parts=content.split(/\s*\u00b7\s*(?=<strong>)/);
+    var bullets="";
+    parts.forEach(function(part){
+      var trimmed=part.trim();
+      if(trimmed&&trimmed.length>5) bullets+="<li style=\"margin-bottom:6px\">"+trimmed+"</li>";
+    });
+    if(bullets) el.innerHTML="<strong style=\"display:block;margin-bottom:10px\">Why is this app growing?</strong><ul style=\"list-style:disc;padding-left:20px;margin:0\">"+bullets+"</ul>";
+  });
+}
+function v22bPostProcess(){
+  v22bHidePills();
+  v22bReorderInsights();
+  v22bFixLearnCards();
+}
+var _origSwitchCategory=switchCategory;
+switchCategory=function(cat,el){
+  _origSwitchCategory(cat,el);
+  setTimeout(v22bPostProcess,150);
+};
+setTimeout(v22bPostProcess,300);
 </script>
 </body>
 </html>
