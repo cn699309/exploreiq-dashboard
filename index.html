@@ -400,7 +400,7 @@
     outline: none; font-family: inherit;
   }
   .section-label {
-    font-size: .65rem; font-weight: 600; text-transform: uppercase;
+    font-size: .75rem; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.12em; color: var(--muted); margin-bottom: 8px;
   }
   hr.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
@@ -549,7 +549,7 @@
 
   /* ─── DRAGGABLE SECTIONS ─── */
   .drag-section { position: relative; }
-  .drag-handle {
+  .drag-handle { display: none !important;
     position: absolute; top: 14px; right: 14px; z-index: 20;
     opacity: 0; transition: opacity .18s; cursor: grab;
     background: var(--surface3); border: 1px solid var(--border2);
@@ -631,7 +631,7 @@
     text-transform: uppercase; color: var(--muted2); margin-bottom: 4px;
   }
   .insight-signal-title {
-    font-size: 1.02rem; font-weight: 700; color: var(--accent);
+    font-size: 1.15rem; font-weight: 700; color: var(--accent);
     line-height: 1.3; margin-bottom: 8px;
     font-family: 'Space Grotesk', sans-serif;
   }
@@ -829,6 +829,11 @@
   .section-divider::before, .section-divider::after {
     content:''; flex:1; height:1px; background: var(--border);
   }
+
+/* === UI FIX: hide summary highlight card === */
+.overview-kpi-row > div:first-child[style*="linear-gradient"] { display: none !important; }
+/* === UI FIX: bigger section labels === */
+.insight-signal-title { font-size: 1.2rem !important; }
 </style>
 </head>
 <body>
@@ -846,7 +851,7 @@
   </div>
   <div class="global-nav-right">
     <span>iOS · United States · Feb 2026</span>
-    <span class="global-nav-tag">SensorTower</span>
+    
   </div>
 </div>
 
@@ -894,7 +899,7 @@
   <div class="hero-title" style="font-size:2.4rem;margin-top:4px;display:block">
     <em>iOS United States</em> · February 2026
   </div>
-  <div class="hero-sub">SensorTower · Top 100 Free Downloads · App Store</div>
+  <div class="hero-sub">Top 100 Free Downloads · App Store</div>
   <div class="hero-divider"></div>
   <div class="hero-meta" id="heroStats"></div>
 </div>
@@ -3262,6 +3267,36 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initQuickPrompts();
   initDraggable();
 });
+
+// === UI FIX: Add strategy one-liner to Key Insights ===
+(function() {
+  const origInit = window.initOverviewKpis;
+  if (!origInit) return;
+  window.initOverviewKpis = function() {
+    origInit.apply(this, arguments);
+    setTimeout(function() {
+      var insightSection = document.querySelector('.insight-grid');
+      if (!insightSection) return;
+      var parent = insightSection.closest('.drag-section') || insightSection.parentElement;
+      if (parent.querySelector('.strategy-oneliner')) return;
+      var cat = (typeof currentCategory !== 'undefined') ? currentCategory : 'photo';
+      var strategies = {
+        photo: 'Own one AI-powered moment so stunning users share it \u2014 then expand from there.',
+        social: 'Build a new social verb for one underserved tribe \u2014 community is your moat.',
+        productivity: 'Go vertical: own one painful workflow and make AI do it 10x faster.'
+      };
+      var text = strategies[cat] || strategies.photo;
+      var header = document.createElement('div');
+      header.className = 'strategy-oneliner';
+      header.style.cssText = 'padding:14px 20px;margin-bottom:12px;border-radius:10px;font-size:1.05rem;font-weight:600;color:var(--accent);line-height:1.4;letter-spacing:0.01em;';
+      header.textContent = text;
+      var sectionLabel = parent.querySelector('.section-label');
+      if (sectionLabel) {
+        sectionLabel.parentElement.insertBefore(header, sectionLabel.nextSibling);
+      }
+    }, 100);
+  };
+})();
 </script>
 </body>
 </html>
