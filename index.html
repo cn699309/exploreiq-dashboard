@@ -902,7 +902,6 @@
 <div class="tab-bar">
   <div class="tab active" onclick="switchTab('overview')">Overview</div>
   <div class="tab" onclick="switchTab('table')">Top 100 Apps</div>
-  <div class="tab" onclick="switchTab('cards')">App Cards</div>
   <div class="tab" onclick="switchTab('ai')">Ask AI <span style="font-size:.6rem;color:var(--muted);margin-left:4px;">(coming soon)</span></div>
 </div>
 
@@ -1108,23 +1107,6 @@
     </table>
   </div>
   <div id="tableCount" style="color:var(--muted);font-size:.8rem;margin-top:10px;"></div>
-</div>
-
-<!-- ── CARDS ── -->
-<div id="panel-cards" class="panel">
-  <div class="controls">
-    <input class="search-box" id="cardSearch" placeholder="🔍  Search apps…" oninput="renderCards()">
-    <select class="filter" id="cardCountry" onchange="renderCards()">
-      <option value="">All Countries</option>
-    </select>
-    <select class="filter" id="cardSort" onchange="renderCards()">
-      <option value="rank">Sort by Rank</option>
-      <option value="downloads">Sort by Downloads</option>
-      <option value="revenue">Sort by Revenue</option>
-      <option value="releaseDate">Sort by Launch Date</option>
-    </select>
-  </div>
-  <div class="grid-auto" id="cardsContainer"></div>
 </div>
 
 <!-- ── ASK AI ── -->
@@ -2552,7 +2534,7 @@ function initLearnFrom(data = currentData) {
 // ═══════════════════════════════════════════
 function initFilters() {
   const countries = [...new Set(currentData.map(a=>a.publisherCountry))].sort();
-  ['filterCountry','cardCountry'].forEach(id=>{
+  ['filterCountry'].forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
     countries.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=`${COUNTRY_FLAGS[c]||'🌍'} ${c}`; el.appendChild(o); });
@@ -2613,7 +2595,6 @@ async function fetchAppIcons(data) {
   iconFetchInFlight = false;
   // Re-render with icons
   renderTable();
-  renderCards();
 }
 
 function getIconHtml(appId, cls) {
@@ -2731,49 +2712,6 @@ document.addEventListener('click', function(e) {
   const th = e.target.closest('thead th[data-sort]');
   if (th && !e.target.closest('.src-info')) sortTable(th.dataset.sort);
 });
-
-// ═══════════════════════════════════════════
-//  CARDS
-// ═══════════════════════════════════════════
-function renderCards() {
-  const data = getFiltered('cardSearch','cardCountry',null,'cardSort');
-  const maxDl = Math.max(...data.map(a=>a.downloads));
-  document.getElementById('cardsContainer').innerHTML = data.map(a=>{
-    const typeColors = {AI:'var(--accent)',Social:'var(--pink)',Editing:'var(--teal)',Utility:'var(--amber)'};
-    const typeColor = typeColors[a.type]||'var(--muted)';
-    return `<div class="app-card" onclick="openCard(${a.rank})">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
-        ${getIconHtml(a.id, 'app-card-icon')}
-        <div>
-          <div class="rank-num">RANK #${a.rank}</div>
-          <div class="app-title">${a.name}</div>
-          <div class="app-dev">${COUNTRY_FLAGS[a.publisherCountry]||'🌍'} ${a.publisher}</div>
-        </div>
-      </div>
-      <div class="metrics">
-        <div class="metric"><div class="metric-val" style="color:var(--accent)">${fmt(a.downloads)}</div><div class="metric-lbl">Downloads WW</div></div>
-        <div class="metric"><div class="metric-val" style="color:var(--teal)">${fmt(a.revenue,'rev')}</div><div class="metric-lbl">Revenue WW</div></div>
-      </div>
-      <div class="story">${a.story}</div>
-      <div class="tags">
-        <span class="tag" style="color:${typeColor};background:${typeColor}22">${a.type}</span>
-        <span class="tag">${a.publisherCountry}</span>
-        <span class="tag">${a.founded}</span>
-        <span class="tag">${a.employees.split('-')[0]} emp</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function openCard(rank) {
-  const a = currentData.find(x=>x.rank===rank);
-  if(!a) return;
-  // Set prompt in chat and switch to AI tab
-  switchTab('ai');
-  const inp = document.getElementById('chatInput');
-  inp.value = `Tell me more about "${a.name}" (#${a.rank}) — analysis of its competitive positioning, monetization strategy, and growth story based on the dataset.`;
-  inp.focus();
-}
 
 // ═══════════════════════════════════════════
 //  AI CHAT
@@ -2912,7 +2850,7 @@ function usePrompt(text) {
 // ═══════════════════════════════════════════
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((el,i)=>{
-    const ids = ['overview','table','cards','ai'];
+    const ids = ['overview','table','ai'];
     el.classList.toggle('active', ids[i]===tab);
   });
   document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
@@ -2997,7 +2935,6 @@ function switchCategory(cat, el) {
     initFilters();
     switchTab('overview');
     renderTable();
-    renderCards();
     fetchAppIcons(currentData);
 
     // Reset collapsible states on category switch (charts only)
@@ -3246,7 +3183,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initLearnFrom();
   initFilters();
   renderTable();
-  renderCards();
   fetchAppIcons(currentData);
   initQuickPrompts();
   initDraggable();
