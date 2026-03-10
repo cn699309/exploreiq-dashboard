@@ -749,15 +749,18 @@
   .chart-insights {
     margin-top: 16px; padding-top: 14px;
     border-top: 1px solid var(--border);
-    display: flex; flex-direction: column; gap: 7px;
+    display: flex; flex-direction: column; gap: 10px;
   }
   .ci {
-    display: flex; align-items: flex-start; gap: 9px;
-    font-size: .76rem; color: var(--muted); line-height: 1.6;
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: .78rem; color: var(--muted); line-height: 1.7;
+    padding: 10px 14px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
   }
+  .ci-icon { font-size: .85rem; flex-shrink: 0; margin-top: 1px; }
   .ci-dot {
     width: 5px; height: 5px; border-radius: 50%;
-    flex-shrink: 0; margin-top: 5px;
+    flex-shrink: 0; margin-top: 7px;
   }
   .ci-dot.accent { background: var(--accent); }
   .ci-dot.teal   { background: var(--teal); }
@@ -766,6 +769,50 @@
   .ci-dot.green  { background: var(--green); }
   .ci strong { color: var(--text); font-weight: 600; }
   .ci em { font-style: normal; color: var(--accent); }
+
+  /* ─── OVERVIEW STAT CALLOUTS ─── */
+  .stat-callout {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 8px; font-size: .72rem; font-weight: 600;
+    background: var(--surface2); border: 1px solid var(--border);
+  }
+  .stat-callout .sc-val { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+  .overview-kpi-row {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .overview-kpi {
+    flex: 1; min-width: 140px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; position: relative; overflow: hidden;
+  }
+  .overview-kpi::before { content:''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .overview-kpi:nth-child(1)::before { background: var(--accent); }
+  .overview-kpi:nth-child(2)::before { background: var(--teal); }
+  .overview-kpi:nth-child(3)::before { background: var(--gold); }
+  .overview-kpi:nth-child(4)::before { background: var(--rose); }
+  .overview-kpi .kpi-val { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; line-height: 1; }
+  .overview-kpi .kpi-lbl { font-size: .65rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+  .overview-kpi .kpi-sub { font-size: .7rem; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  /* ─── APP LIST TOOLTIP (clickable) ─── */
+  .app-list-tip { position: relative; border-bottom: 1px dashed var(--accent); cursor: pointer; display: inline; color: var(--accent); font-weight: 600; }
+  .app-list-tip .alt-popup {
+    display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--surface3); border: 1px solid var(--border2); border-radius: 10px;
+    padding: 10px 14px; min-width: 220px; max-width: 380px; max-height: 320px; overflow-y: auto;
+    z-index: 999; font-size: .74rem; color: var(--text); line-height: 1.5;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5); pointer-events: auto;
+  }
+  .app-list-tip:hover .alt-popup { display: block; }
+  .alt-popup .alt-title { font-weight: 700; font-size: .65rem; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .alt-popup .alt-item {
+    display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px;
+    cursor: pointer; transition: background .12s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .alt-popup .alt-item:hover { background: var(--hover); }
+  .alt-popup .alt-item .alt-rank { font-size: .6rem; color: var(--muted); font-weight: 600; min-width: 22px; }
+  .alt-popup .alt-item .alt-name { font-weight: 500; color: var(--text); }
+  .alt-popup .alt-item .alt-metric { font-size: .65rem; color: var(--muted); margin-left: auto; }
+  .alt-popup .alt-footer { font-size: .6rem; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); font-style: italic; }
 
   /* ─── INSIGHT DIVIDER LABEL ─── */
   .section-divider {
@@ -889,6 +936,12 @@
 <div id="panel-overview" class="panel active">
 <div id="overviewSections">
 
+  <!-- ⓪ Overview Quick Stats -->
+  <div class="drag-section mb-16" draggable="true" data-id="quickstats">
+    <div class="drag-handle"><span class="drag-handle-dots">⠿⠿</span> drag</div>
+    <div id="overviewKpis" class="overview-kpi-row"></div>
+  </div>
+
   <!-- ① Key Insights -->
   <div class="drag-section mb-16" draggable="true" data-id="insights">
     <div class="drag-handle"><span class="drag-handle-dots">⠿⠿</span> drag</div>
@@ -901,7 +954,6 @@
       <div class="insights-scroll-wrap">
         <div id="keyInsights"></div>
       </div>
-      <!-- What to learn button removed -->
     </div>
   </div>
 
@@ -950,18 +1002,21 @@
     <div class="grid-3">
       <div class="card">
         <div class="card-title">Publisher Country Distribution</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px;line-height:1.5;">Where the top 100 app publishers are headquartered.</div>
         <div class="chart-wrap"><canvas id="chartCountry"></canvas></div>
         <div class="learn-cta chart-learn" onclick="toggleChartInsight(this)"><span class="sparkle">✦</span> What to learn <span class="ai-disclosure" onclick="event.stopPropagation()" style="width:14px;height:14px;font-size:.5rem;">✦<span class="ai-disclosure-popup"><div class="aid-title">✦ AI-Generated Takeaway</div><div class="aid-prompt">"As an experienced product director and angel investor, analyze this chart's data and provide 1–2 actionable takeaways for a startup founder. Be specific and contrarian — tell them what to actually do differently based on what the data reveals. Avoid generic advice."</div><div class="aid-note">Takeaways generated by Claude AI from the chart's underlying Top 100 dataset.</div></span></span> <span class="arrow">▼</span></div>
         <div class="collapsible-insights"><div class="chart-insights" id="ins-country"></div></div>
       </div>
       <div class="card">
         <div class="card-title">Downloads vs Revenue (Scatter)</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px;line-height:1.5;">Each dot is an app — reveals who monetizes well vs. who just has users.</div>
         <div class="chart-wrap"><canvas id="chartScatter"></canvas></div>
         <div class="learn-cta chart-learn" onclick="toggleChartInsight(this)"><span class="sparkle">✦</span> What to learn <span class="ai-disclosure" onclick="event.stopPropagation()" style="width:14px;height:14px;font-size:.5rem;">✦<span class="ai-disclosure-popup"><div class="aid-title">✦ AI-Generated Takeaway</div><div class="aid-prompt">"As an experienced product director and angel investor, analyze this chart's data and provide 1–2 actionable takeaways for a startup founder. Be specific and contrarian — tell them what to actually do differently based on what the data reveals. Avoid generic advice."</div><div class="aid-note">Takeaways generated by Claude AI from the chart's underlying Top 100 dataset.</div></span></span> <span class="arrow">▼</span></div>
         <div class="collapsible-insights"><div class="chart-insights" id="ins-scatter"></div></div>
       </div>
       <div class="card">
         <div class="card-title">App Launch Year Distribution</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px;line-height:1.5;">When today's top apps first launched — is the window still open?</div>
         <div class="chart-wrap"><canvas id="chartLaunch"></canvas></div>
         <div class="learn-cta chart-learn" onclick="toggleChartInsight(this)"><span class="sparkle">✦</span> What to learn <span class="ai-disclosure" onclick="event.stopPropagation()" style="width:14px;height:14px;font-size:.5rem;">✦<span class="ai-disclosure-popup"><div class="aid-title">✦ AI-Generated Takeaway</div><div class="aid-prompt">"As an experienced product director and angel investor, analyze this chart's data and provide 1–2 actionable takeaways for a startup founder. Be specific and contrarian — tell them what to actually do differently based on what the data reveals. Avoid generic advice."</div><div class="aid-note">Takeaways generated by Claude AI from the chart's underlying Top 100 dataset.</div></span></span> <span class="arrow">▼</span></div>
         <div class="collapsible-insights"><div class="chart-insights" id="ins-launch"></div></div>
@@ -975,12 +1030,14 @@
     <div class="grid-2">
       <div class="card">
         <div class="card-title">Top 10 by Downloads (WW, Feb 2026)</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px;line-height:1.5;">The heaviest hitters by install volume — who owns distribution?</div>
         <div class="chart-wrap"><canvas id="chartDownloads"></canvas></div>
         <div class="learn-cta chart-learn" onclick="toggleChartInsight(this)"><span class="sparkle">✦</span> What to learn <span class="ai-disclosure" onclick="event.stopPropagation()" style="width:14px;height:14px;font-size:.5rem;">✦<span class="ai-disclosure-popup"><div class="aid-title">✦ AI-Generated Takeaway</div><div class="aid-prompt">"As an experienced product director and angel investor, analyze this chart's data and provide 1–2 actionable takeaways for a startup founder. Be specific and contrarian — tell them what to actually do differently based on what the data reveals. Avoid generic advice."</div><div class="aid-note">Takeaways generated by Claude AI from the chart's underlying Top 100 dataset.</div></span></span> <span class="arrow">▼</span></div>
         <div class="collapsible-insights"><div class="chart-insights" id="ins-downloads"></div></div>
       </div>
       <div class="card">
         <div class="card-title">Top 10 by Revenue (WW, Feb 2026)</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-bottom:10px;line-height:1.5;">Who earns the most — and how different is it from the downloads list?</div>
         <div class="chart-wrap"><canvas id="chartRevenue"></canvas></div>
         <div class="learn-cta chart-learn" onclick="toggleChartInsight(this)"><span class="sparkle">✦</span> What to learn <span class="ai-disclosure" onclick="event.stopPropagation()" style="width:14px;height:14px;font-size:.5rem;">✦<span class="ai-disclosure-popup"><div class="aid-title">✦ AI-Generated Takeaway</div><div class="aid-prompt">"As an experienced product director and angel investor, analyze this chart's data and provide 1–2 actionable takeaways for a startup founder. Be specific and contrarian — tell them what to actually do differently based on what the data reveals. Avoid generic advice."</div><div class="aid-note">Takeaways generated by Claude AI from the chart's underlying Top 100 dataset.</div></span></span> <span class="arrow">▼</span></div>
         <div class="collapsible-insights"><div class="chart-insights" id="ins-revenue"></div></div>
@@ -1942,79 +1999,246 @@ function initCharts(data = currentData) {
 // ═══════════════════════════════════════════
 //  CHART INSIGHTS
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  OVERVIEW KPI CARDS
+// ═══════════════════════════════════════════
+function initOverviewKpis(data = currentData) {
+  const el = document.getElementById('overviewKpis');
+  if (!el) return;
+  const totalDl = data.reduce((s,a) => s + a.downloads, 0);
+  const totalRev = data.reduce((s,a) => s + a.revenue, 0);
+  const avgRpd = data.filter(a=>a.downloads>0).reduce((s,a) => s + a.revenue/a.downloads, 0) / data.filter(a=>a.downloads>0).length;
+  const smallTeams = data.filter(a => { const e=a.employees.replace(/[^0-9\-]/g,''); const m=e.includes('-')?parseInt(e.split('-')[1]):parseInt(e); return m<=500; });
+  const newApps = data.filter(a => a.releaseDate >= '2022-01-01');
+  const aiApps = data.filter(a => a.type === 'AI');
+  const countries = [...new Set(data.map(a=>a.publisherCountry))].length;
+
+  // Category-specific KPIs
+  let kpis = [];
+  if (currentCategory === 'social') {
+    const metaApps = data.filter(a=>a.company&&a.company.includes('Meta'));
+    const datingApps = data.filter(a=>a.type==='Dating');
+    kpis = [
+      { val: fmt(totalDl), lbl: 'Total Downloads', sub: `${data.length} apps tracked`, color: 'var(--accent)' },
+      { val: metaApps.length+'', lbl: 'Meta-owned Apps', sub: `${(metaApps.reduce((s,a)=>s+a.downloads,0)/totalDl*100).toFixed(0)}% of downloads`, color: 'var(--rose)' },
+      { val: datingApps.length+'', lbl: 'Dating Apps', sub: 'Most fragmented sub-category', color: 'var(--gold)' },
+      { val: newApps.length+'', lbl: 'New (2022+)', sub: 'Gen Z is reshuffling social', color: 'var(--teal)' },
+    ];
+  } else if (currentCategory === 'productivity') {
+    kpis = [
+      { val: fmt(totalDl), lbl: 'Total Downloads', sub: `${data.length} apps tracked`, color: 'var(--accent)' },
+      { val: aiApps.length+'', lbl: 'AI-Powered Apps', sub: 'AI owns the top of the charts', color: 'var(--accent)' },
+      { val: '$'+avgRpd.toFixed(2), lbl: 'Avg Rev/Download', sub: 'Workflow tools charge 5–10×', color: 'var(--teal)' },
+      { val: newApps.length+'', lbl: 'New (2022+)', sub: 'AI-native displacing incumbents', color: 'var(--gold)' },
+    ];
+  } else {
+    kpis = [
+      { val: fmt(totalDl), lbl: 'Total Downloads', sub: `${data.length} apps tracked`, color: 'var(--accent)' },
+      { val: smallTeams.length+'', lbl: 'Small Teams (<500)', sub: 'Lean teams thriving in top 100', color: 'var(--teal)' },
+      { val: '$'+avgRpd.toFixed(2), lbl: 'Avg Rev/Download', sub: 'Best-in-class exceed $5/dl', color: 'var(--gold)' },
+      { val: newApps.length+'', lbl: 'New (2022+)', sub: 'Market window is still open', color: 'var(--rose)' },
+    ];
+  }
+
+  el.innerHTML = kpis.map(k => `
+    <div class="overview-kpi">
+      <div class="kpi-val" style="color:${k.color}">${k.val}</div>
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ── App-list tooltip helper ──
+// Returns a hoverable "<N> apps" span that shows the list & allows click-to-filter
+function appListTip(apps, label, metricFn) {
+  if (!apps || apps.length === 0) return `<strong>0 apps</strong>`;
+  const names = apps.slice(0, 15).map(a => {
+    const metric = metricFn ? metricFn(a) : `#${a.rank}`;
+    return `<div class="alt-item" onclick="filterTableToApps([${apps.map(x=>x.rank).join(',')}])"><span class="alt-rank">#${a.rank}</span><span class="alt-name">${a.name}</span><span class="alt-metric">${metric}</span></div>`;
+  }).join('');
+  const more = apps.length > 15 ? `<div style="font-size:.6rem;color:var(--muted);padding:2px 6px;">+${apps.length-15} more</div>` : '';
+  return `<span class="app-list-tip" onclick="filterTableToApps([${apps.map(x=>x.rank).join(',')}])">${apps.length} apps<span class="alt-popup"><div class="alt-title">${label}</div>${names}${more}<div class="alt-footer">Click to view in table →</div></span></span>`;
+}
+
+function filterTableToApps(ranks) {
+  switchTab('table');
+  // Reset filters
+  const search = document.getElementById('tableSearch');
+  const filterCountry = document.getElementById('filterCountry');
+  const filterCat = document.getElementById('filterCategory');
+  const groupBy = document.getElementById('groupBy');
+  if (search) search.value = '';
+  if (filterCountry) filterCountry.value = '';
+  if (filterCat) filterCat.value = '';
+  if (groupBy) groupBy.value = '';
+  // Render only matching apps
+  const tbody = document.getElementById('tableBody');
+  const filtered = currentData.filter(a => ranks.includes(a.rank)).sort((a,b) => a.rank - b.rank);
+  const maxDl = Math.max(...filtered.map(a=>a.downloads));
+  tbody.innerHTML = filtered.map(a => {
+    const rankCls = a.rank===1?'gold':a.rank===2?'silver':a.rank===3?'bronze':'';
+    const c = COUNTRY_FLAGS[a.publisherCountry]||'🌍';
+    const tc = TYPE_COLORS[a.type]||'var(--muted)';
+    return `<tr>
+      <td><span class="rank-badge ${rankCls}">${a.rank}</span></td>
+      <td><div class="app-cell">${getIconHtml(a.id, 'app-icon')}<div><div class="app-name">${a.name}</div><div class="publisher">${a.publisher}</div></div></div></td>
+      <td><span class="type-tag" style="color:${tc};background:${tc}18">${a.type}</span></td>
+      <td style="font-weight:700;color:var(--teal)">${fmt(a.revenue,'rev')}</td>
+      <td style="font-weight:700;color:var(--accent)">${fmt(a.downloads)}</td>
+      <td><span class="age-tip" style="color:var(--muted);">${appAge(a.releaseDate)}y<span class="age-tip-popup">Launched: ${a.releaseDate}</span></span></td>
+      <td style="font-size:.8rem">${a.company}</td>
+      <td>${c} <span style="color:var(--muted);font-size:.82rem">${a.publisherCountry}</span></td>
+      <td style="color:var(--muted);font-size:.78rem">${a.employees}</td>
+      <td style="font-size:.75rem;color:var(--muted);max-width:160px">${a.valuation}</td>
+      <td style="color:var(--muted);text-align:center">${a.founded}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tableCount').textContent = `Filtered: ${filtered.length} apps (click Overview to reset)`;
+}
+
 function initChartInsights(data = currentData) {
   const dlSorted  = [...data].sort((a,b) => b.downloads - a.downloads);
   const revSorted = [...data].sort((a,b) => b.revenue   - a.revenue);
   const totalDl   = data.reduce((s,a) => s + a.downloads, 0);
   const totalRev  = data.reduce((s,a) => s + a.revenue,   0);
+  const cat = currentCategory;
 
   const render = (id, bullets) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.innerHTML = bullets.map(([dot, html]) =>
-      `<div class="ci"><span class="ci-dot ${dot}"></span><span>${html}</span></div>`
+    el.innerHTML = bullets.map(([icon, html]) =>
+      `<div class="ci"><span class="ci-icon">${icon}</span><span>${html}</span></div>`
     ).join('');
   };
 
-  // ── 1. Downloads ──
+  // ── Shared calculations ──
   const top3DlPct = (dlSorted.slice(0,3).reduce((s,a)=>s+a.downloads,0) / totalDl * 100).toFixed(0);
-  const newTop10  = dlSorted.slice(0,10).filter(a => a.releaseDate >= '2022-01-01').length;
-  render('ins-downloads', [
-    ['accent', `Top 3 own <strong>${top3DlPct}%</strong> of downloads. <strong>Don't aim for #1</strong> — target ranks 20–50 where users are underserved and incumbents are complacent.`],
-    ['teal', `<strong>${newTop10} of the top 10</strong> launched post-2021. <strong>Your timing is fine</strong> — ship fast with one unfair advantage (AI, niche, or distribution hack).`],
-  ]);
-
-  // ── 2. Revenue ──
-  const topRevApp = revSorted[0];
-  const rev2App   = revSorted[1];
-  const rpdChamp  = [...data].sort((a,b) => (b.revenue/b.downloads)-(a.revenue/a.downloads))[0];
-  render('ins-revenue', [
-    ['accent', `<strong>${rpdChamp.name}</strong> earns the most per install. <strong>Study their paywall, not the #1 app's</strong> — revenue-per-download is the metric that predicts your business model.`],
-    ['teal', `Downloads rank and revenue rank are very different lists. <strong>Design your monetization before your growth loop</strong> — the best-converting apps bake payment into the core experience.`],
-  ]);
-
-  // ── 3. Country ──
-  const cCounts = {};
-  data.forEach(a => { cCounts[a.publisherCountry] = (cCounts[a.publisherCountry]||0)+1; });
-  const usCt = cCounts['US']||0;
-  const cnCt = cCounts['China']||0;
-  const otherCt = Object.keys(cCounts).filter(c=>c!=='US'&&c!=='China').length;
-  render('ins-country', [
-    ['accent', `US (${usCt}) and China (${cnCt}) dominate. <strong>If you're outside these markets, that's your edge</strong> — build for a region the giants ignore, then expand.`],
-    ['teal', `<strong>${otherCt} other countries</strong> have top-100 apps. Cultural fluency and local trust beat big-tech budgets in underserved markets.`],
-  ]);
-
-  // ── 4. Scatter ──
+  const newTop10  = dlSorted.slice(0,10).filter(a => a.releaseDate >= '2022-01-01');
+  const top3apps  = dlSorted.slice(0,3);
+  const rpdChamp  = [...data].filter(a=>a.downloads>0&&a.revenue>0).sort((a,b) => (b.revenue/b.downloads)-(a.revenue/a.downloads))[0];
+  const cCounts = {}; data.forEach(a => { cCounts[a.publisherCountry] = (cCounts[a.publisherCountry]||0)+1; });
+  const usCt = cCounts['US']||0; const cnCt = cCounts['China']||0;
+  const otherCountries = Object.keys(cCounts).filter(c=>c!=='US'&&c!=='China');
   let cumR = 0, appsFor80 = 0;
   for (const a of revSorted) { cumR += a.revenue; appsFor80++; if (cumR/totalRev >= 0.80) break; }
-  const highDlLowRev = data.filter(a => a.downloads >= 500000 && a.revenue <= 200000).length;
-  render('ins-scatter', [
-    ['accent', `<strong>${highDlLowRev} apps</strong> have huge audiences but weak revenue. <strong>These are acquisition targets or partnership opportunities</strong> — they solved distribution, you solve monetization.`],
-    ['rose', `Only <strong>${appsFor80} apps</strong> earn 80% of revenue. <strong>Build your paywall from day one</strong> — most founders add monetization too late and never recover.`],
-  ]);
-
-  // ── 5. Launch Year ──
-  const yCounts = {};
-  data.forEach(a => { const y = a.releaseDate.slice(0,4); yCounts[y] = (yCounts[y]||0)+1; });
-  const peakY    = Object.entries(yCounts).sort((a,b)=>b[1]-a[1])[0];
-  const post2022 = Object.entries(yCounts).filter(([y])=>y>='2022').reduce((s,[,n])=>s+n,0);
-  render('ins-launch', [
-    ['accent', `<strong>${post2022} apps</strong> from 2022+ cracked the top 100. <strong>You're not too late</strong> — new categories (AI, wellness) are still forming and don't have a clear winner yet.`],
-    ['teal', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}). <strong>Build a daily habit, not a feature</strong> — that's what separates apps that last from apps that spike and die.`],
-  ]);
-
-  // ── 6. Scale ──
+  const top80rev = revSorted.slice(0, appsFor80);
+  const highDlLowRev = data.filter(a => a.downloads >= 500000 && a.revenue <= 200000);
+  const yCounts = {}; data.forEach(a => { const y = a.releaseDate.slice(0,4); yCounts[y] = (yCounts[y]||0)+1; });
+  const peakY = Object.entries(yCounts).sort((a,b)=>b[1]-a[1])[0];
+  const post2022apps = data.filter(a => a.releaseDate >= '2022-01-01');
   const seenC = new Set();
-  const pgFn  = a => a.valuation && (a.valuation.includes('T market') || a.valuation.includes('Trillion'));
+  const pgFn = a => a.valuation && (a.valuation.includes('T market') || a.valuation.includes('Trillion'));
   let pgCos = 0, pgDl = 0;
-  data.forEach(a => {
-    if (!seenC.has(a.company)) { seenC.add(a.company); if (pgFn(a)) pgCos++; }
-    if (pgFn(a)) pgDl += a.downloads;
-  });
+  data.forEach(a => { if (!seenC.has(a.company)) { seenC.add(a.company); if (pgFn(a)) pgCos++; } if (pgFn(a)) pgDl += a.downloads; });
   const pgDlPct = (pgDl/totalDl*100).toFixed(0);
-  render('ins-scale', [
-    ['accent', `Giants own <strong>${pgDlPct}%</strong> of downloads but can't move fast. <strong>Your advantage is speed and focus</strong> — pick one use case they'd never prioritize and own it completely.`],
-  ]);
+
+  // ══════════════════════════════════
+  // CATEGORY-SPECIFIC CHART INSIGHTS
+  // ══════════════════════════════════
+
+  if (cat === 'social') {
+    // ── Downloads (Social) ──
+    const metaApps = dlSorted.filter(a=>a.company&&a.company.includes('Meta'));
+    const metaPct = (metaApps.reduce((s,a)=>s+a.downloads,0)/totalDl*100).toFixed(0);
+    render('ins-downloads', [
+      ['📊', `Top 3 (${top3apps.map(a=>a.name).join(', ')}) own <strong>${top3DlPct}%</strong> of downloads — Meta alone holds <strong>${metaPct}%</strong>. Don't compete on reach; <strong>compete on intimacy and depth</strong> in a community Meta can't serve.`],
+      ['🚀', `${appListTip(newTop10, 'New apps in Top 10', a=>fmt(a.downloads))} launched post-2021 in the top 10. <strong>Social is being reinvented</strong> — new interaction patterns (widgets, authenticity, decentralization) create openings.`],
+    ]);
+    // ── Revenue (Social) ──
+    const datingRevApps = revSorted.filter(a=>a.type==='Dating');
+    render('ins-revenue', [
+      ['💰', `<strong>${rpdChamp?.name || 'N/A'}</strong> earns the most per install. In social, <strong>identity-based apps monetize best</strong> — dating, faith-based, and LGBTQ+ apps convert because users have high intent.`],
+      ['💎', `${appListTip(datingRevApps.slice(0,8), 'Dating apps by revenue', a=>fmt(a.revenue,'rev'))} dating apps dominate revenue. <strong>People pay for connection, not content</strong> — design your paywall around relationship outcomes, not feature access.`],
+    ]);
+    // ── Country (Social) ──
+    const uniqueCountries = Object.keys(cCounts).length;
+    render('ins-country', [
+      ['🌏', `Apps span <strong>${uniqueCountries} countries</strong> — social networking is the <strong>most geographically fragmented</strong> category. LINE owns Japan, WeChat owns China, Viber owns Eastern Europe. Geography IS your moat.`],
+      ['🏠', `US has ${usCt} apps but <strong>regional monopolies</strong> are the real story. <strong>Win one city before one country</strong> — Nextdoor proved hyperlocal beats global for social.`],
+    ]);
+    // ── Scatter (Social) ──
+    render('ins-scatter', [
+      ['🎯', `${appListTip(highDlLowRev, 'High downloads, low revenue', a=>fmt(a.downloads))} have massive audiences but weak revenue. These solved distribution but <strong>not monetization</strong> — study their growth loops, then add a business model they missed.`],
+      ['🔥', `Only ${appListTip(top80rev, 'Apps earning 80% of revenue', a=>fmt(a.revenue,'rev'))} earn 80% of revenue. Social monetization is <strong>winner-take-most</strong> — nail your revenue model in the first 90 days.`],
+    ]);
+    // ── Launch Year (Social) ──
+    render('ins-launch', [
+      ['📅', `${appListTip(post2022apps, 'Apps launched 2022+', a=>a.releaseDate.slice(0,4))} from 2022+ are in the top 100. <strong>Gen Z is actively rejecting</strong> Instagram-era social — new interaction patterns (authenticity, privacy, widgets) are winning.`],
+      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}). Social apps that last <strong>become identity infrastructure</strong> — your users should feel the app is part of who they are.`],
+    ]);
+    // ── Scale (Social) ──
+    render('ins-scale', [
+      ['🏢', `Giants own <strong>${pgDlPct}%</strong> of downloads — but Meta can't serve 1,000 communities deeply. <strong>Pick one tribe</strong> they treat as a demographic checkbox and build obsessively for them.`],
+    ]);
+
+  } else if (cat === 'productivity') {
+    // ── Downloads (Productivity) ──
+    const aiTopApps = dlSorted.filter(a=>a.type==='AI').slice(0,5);
+    render('ins-downloads', [
+      ['🤖', `Top 3 (${top3apps.map(a=>a.name).join(', ')}) own <strong>${top3DlPct}%</strong> of downloads — all AI assistants. <strong>Horizontal AI is a 5-way war</strong> you can't win. Go vertical: own one painful workflow entirely.`],
+      ['🚀', `${appListTip(newTop10, 'New apps in Top 10', a=>fmt(a.downloads))} in the top 10 launched post-2021. <strong>AI-native apps are displacing</strong> decade-old office tools for the first time.`],
+    ]);
+    // ── Revenue (Productivity) ──
+    const vpnRevApps = revSorted.filter(a=>a.type==='VPN');
+    render('ins-revenue', [
+      ['💰', `<strong>${rpdChamp?.name || 'N/A'}</strong> earns the most per install. In productivity, <strong>workflow-specific tools charge 5–10× more</strong> than general assistants — specificity commands premium pricing.`],
+      ['🔒', `${appListTip(vpnRevApps.slice(0,6), 'VPN apps by revenue', a=>fmt(a.revenue,'rev'))} VPN apps are a <strong>hidden revenue giant</strong> in this category. Privacy-as-subscription is a $44B market hiding inside "Productivity."`],
+    ]);
+    // ── Country (Productivity) ──
+    const cnApps = data.filter(a=>a.publisherCountry==='China');
+    render('ins-country', [
+      ['🌏', `US (${usCt}) dominates but <strong>Chinese AI apps are breaking through</strong>: ${cnApps.slice(0,3).map(a=>a.name).join(', ')}. Chinese labs ship faster and cheaper — your edge is <strong>compliance, depth, and enterprise trust</strong>.`],
+      ['🏠', `${otherCountries.length} non-US/China countries have top-100 apps. <strong>Regulatory fragmentation is your moat</strong> — GDPR, SOC 2, HIPAA compliance lets you charge premium in markets giants ignore.`],
+    ]);
+    // ── Scatter (Productivity) ──
+    render('ins-scatter', [
+      ['🎯', `${appListTip(highDlLowRev, 'High downloads, low revenue', a=>fmt(a.downloads))} have huge audiences but weak revenue. Many are <strong>free Google/Microsoft tools</strong> — the opportunity is charging for what they give away poorly.`],
+      ['🔥', `Only ${appListTip(top80rev, 'Apps earning 80% of revenue', a=>fmt(a.revenue,'rev'))} earn 80% of revenue. <strong>Build your paywall from day one</strong> — productivity users expect to pay when you save them time.`],
+    ]);
+    // ── Launch Year (Productivity) ──
+    render('ins-launch', [
+      ['📅', `${appListTip(post2022apps, 'Apps launched 2022+', a=>a.releaseDate.slice(0,4))} from 2022+ cracked the top 100. <strong>The AI wave is real</strong> — but the next winners will win on workflow integration, not chatbot novelty.`],
+      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}). <strong>Habits beat tools</strong> — the apps that last become daily infrastructure, not occasional utilities.`],
+    ]);
+    // ── Scale (Productivity) ──
+    render('ins-scale', [
+      ['🏢', `Giants own <strong>${pgDlPct}%</strong> of downloads — but <strong>they can't go deep</strong>. Google Docs serves everyone equally badly. <strong>Pick one profession</strong> and build the tool they'd never prioritize.`],
+    ]);
+
+  } else {
+    // ── PHOTO & VIDEO (default) ──
+    // ── Downloads ──
+    render('ins-downloads', [
+      ['📊', `Top 3 (${top3apps.map(a=>a.name).join(', ')}) own <strong>${top3DlPct}%</strong> of downloads. <strong>Don't aim for #1</strong> — target ranks 20–50 where users are underserved and incumbents are complacent.`],
+      ['🚀', `${appListTip(newTop10, 'New apps in Top 10', a=>fmt(a.downloads))} in the top 10 launched post-2021. <strong>Your timing is fine</strong> — ship fast with one unfair advantage (AI, niche, or distribution hack).`],
+    ]);
+    // ── Revenue ──
+    const topRpdApps = [...data].filter(a=>a.downloads>0&&a.revenue>0).sort((a,b)=>(b.revenue/b.downloads)-(a.revenue/a.downloads)).slice(0,5);
+    render('ins-revenue', [
+      ['💰', `<strong>${rpdChamp?.name || 'N/A'}</strong> earns the most per install. <strong>Study their paywall, not the #1 app's</strong> — revenue-per-download is the metric that predicts your business model.`],
+      ['💎', `Downloads rank ≠ revenue rank. ${appListTip(topRpdApps, 'Highest revenue per download', a=>'$'+(a.revenue/a.downloads).toFixed(1)+'/dl')} lead in efficiency. <strong>Design your monetization before your growth loop.</strong>`],
+    ]);
+    // ── Country ──
+    render('ins-country', [
+      ['🌏', `US (${usCt}) and China (${cnCt}) dominate. <strong>If you're outside these markets, that's your edge</strong> — build for a region the giants ignore, then expand.`],
+      ['🏠', `<strong>${otherCountries.length} other countries</strong> have top-100 apps. Cultural fluency and local trust beat big-tech budgets in underserved markets.`],
+    ]);
+    // ── Scatter ──
+    render('ins-scatter', [
+      ['🎯', `${appListTip(highDlLowRev, 'High downloads, low revenue', a=>fmt(a.downloads))} have huge audiences but weak revenue. <strong>These are acquisition targets or partnership opportunities</strong> — they solved distribution, you solve monetization.`],
+      ['🔥', `Only ${appListTip(top80rev, 'Apps earning 80% of revenue', a=>fmt(a.revenue,'rev'))} earn 80% of revenue. <strong>Build your paywall from day one</strong> — most founders add monetization too late and never recover.`],
+    ]);
+    // ── Launch Year ──
+    render('ins-launch', [
+      ['📅', `${appListTip(post2022apps, 'Apps launched 2022+', a=>a.releaseDate.slice(0,4))} from 2022+ cracked the top 100. <strong>You're not too late</strong> — new categories (AI, wellness) are still forming and don't have a clear winner yet.`],
+      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}). <strong>Build a daily habit, not a feature</strong> — that's what separates apps that last from apps that spike and die.`],
+    ]);
+    // ── Scale ──
+    render('ins-scale', [
+      ['🏢', `Giants own <strong>${pgDlPct}%</strong> of downloads but can't move fast. <strong>Your advantage is speed and focus</strong> — pick one use case they'd never prioritize and own it completely.`],
+    ]);
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -2697,6 +2921,7 @@ function switchCategory(cat, el) {
     
     // Re-initialize everything with new data
     initHeroStats(currentData);
+    initOverviewKpis(currentData);
     initCharts(currentData);
     initChartInsights(currentData);
     initStrategies();
@@ -2924,6 +3149,7 @@ function initDraggable() {
 // ═══════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', ()=>{
   initHeroStats();
+  initOverviewKpis();
   initCharts();
   initChartInsights();
   initStrategies();
