@@ -189,7 +189,7 @@
   .num-tip-popup .tip-item { padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ─── AI DISCLOSURE ICONS ─── */
-  .ai-disclosure { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(196,168,244,0.1); border: 1px solid rgba(196,168,244,0.2); font-size: .55rem; color: var(--accent); cursor: help; margin-left: 6px; position: relative; vertical-align: middle; flex-shrink: 0; }
+  .ai-disclosure { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(196,168,244,0.1); border: 1px solid rgba(196,168,244,0.2); font-size: .6rem; line-height: 1; color: var(--accent); cursor: help; margin-left: 6px; position: relative; vertical-align: middle; flex-shrink: 0; text-align: center; }
   .ai-disclosure:hover .ai-disclosure-popup { display: block; }
   .ai-disclosure-popup { display: none; position: absolute; top: calc(100% + 8px); left: 0; background: var(--surface3); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 16px; min-width: 320px; max-width: 420px; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
   .ai-disclosure-popup .aid-title { font-size: .62rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -210,9 +210,10 @@
   .group-header-row td .group-stat { font-weight: 400; font-size: .68rem; color: var(--muted); margin-left: 12px; }
 
   /* ─── DATA SOURCE INFO ICONS ─── */
-  .src-info { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: var(--surface3); border: 1px solid var(--border2); font-size: .55rem; color: var(--muted); cursor: help; margin-left: 4px; position: relative; vertical-align: middle; flex-shrink: 0; }
+  .src-info { display: inline; font-size: .72rem; color: var(--muted); cursor: help; margin-left: 4px; position: relative; vertical-align: middle; opacity: .5; transition: opacity .15s; }
+  .src-info:hover { opacity: 1; color: var(--accent); }
   .src-info:hover .src-info-popup { display: block; }
-  .src-info-popup { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--surface3); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 13px; min-width: 170px; z-index: 999; box-shadow: 0 8px 28px rgba(0,0,0,.45); white-space: nowrap; }
+  .src-info-popup { display: none; position: absolute; bottom: calc(100% + 8px); right: 0; background: var(--surface3); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 13px; min-width: 170px; z-index: 999; box-shadow: 0 8px 28px rgba(0,0,0,.45); white-space: nowrap; }
   .src-info-popup .src-title { font-size: .6rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
   .src-info-popup .src-item { font-size: .72rem; color: var(--text); padding: 2px 0; display: flex; align-items: center; gap: 6px; }
   .src-info-popup .src-item::before { content:'•'; color: var(--accent); font-size: .5rem; }
