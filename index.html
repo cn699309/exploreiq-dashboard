@@ -3458,15 +3458,15 @@ function applyV21Fixes() {
   var heroMeta = document.querySelector(".hero-meta");
   if (heroMeta && !heroMeta.querySelector(".kpi-migrated")) {
     var kpis = document.querySelectorAll(".overview-kpi");
-    var wanted = ["Micro Teams", "Avg Rev", "New Since"];
+    var wanted = ["Micro Teams", "Avg Rev", "New (2022"];
     kpis.forEach(function(k) {
-      var label = k.querySelector(".kpi-label");
+      var label = k.querySelector(".kpi-lbl");
       if (!label) return;
       var txt = label.textContent.trim();
       var match = false;
       wanted.forEach(function(w) { if (txt.indexOf(w) !== -1) match = true; });
       if (!match) return;
-      var val = k.querySelector(".kpi-value");
+      var val = k.querySelector(".kpi-val");
       if (!val) return;
       var pill = document.createElement("span");
       pill.className = "stat-pill kpi-migrated";
