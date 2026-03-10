@@ -188,6 +188,37 @@
   .num-tip-popup .tip-title { font-weight: 600; font-size: .7rem; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
   .num-tip-popup .tip-item { padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+  /* ─── DATA SOURCE INFO ICONS ─── */
+  .src-info { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: var(--surface3); border: 1px solid var(--border2); font-size: .55rem; color: var(--muted); cursor: help; margin-left: 4px; position: relative; vertical-align: middle; flex-shrink: 0; }
+  .src-info:hover .src-info-popup { display: block; }
+  .src-info-popup { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--surface3); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 13px; min-width: 170px; z-index: 999; box-shadow: 0 8px 28px rgba(0,0,0,.45); white-space: nowrap; }
+  .src-info-popup .src-title { font-size: .6rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .src-info-popup .src-item { font-size: .72rem; color: var(--text); padding: 2px 0; display: flex; align-items: center; gap: 6px; }
+  .src-info-popup .src-item::before { content:'•'; color: var(--accent); font-size: .5rem; }
+
+  /* ─── KEY INSIGHTS SCROLLABLE ─── */
+  .insights-scroll-wrap { max-height: 520px; overflow-y: auto; position: relative; mask-image: linear-gradient(to bottom, black 85%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%); }
+  .insights-scroll-wrap::-webkit-scrollbar { width: 3px; }
+  .insights-scroll-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ─── APPS TO LEARN FROM ─── */
+  .learn-from-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .learn-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 24px; position: relative; overflow: hidden; }
+  .learn-card::before { content:''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .learn-card:first-child::before { background: linear-gradient(90deg, var(--accent), var(--teal)); }
+  .learn-card:last-child::before { background: linear-gradient(90deg, var(--gold), var(--rose)); }
+  .learn-card-rank { font-size: .58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .learn-card-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .learn-card-dev { font-size: .75rem; color: var(--muted); margin-bottom: 14px; }
+  .learn-card-metrics { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .learn-card-metric { text-align: left; }
+  .learn-card-metric .lcm-val { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; }
+  .learn-card-metric .lcm-lbl { font-size: .6rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .learn-card-why { font-size: .8rem; color: var(--muted); line-height: 1.7; }
+  .learn-card-why strong { color: var(--text); font-weight: 600; }
+  .learn-card-why em { font-style: normal; color: var(--accent); font-weight: 500; }
+  .learn-card-badge { display: inline-flex; align-items: center; gap: 5px; font-size: .6rem; padding: 3px 10px; border-radius: 20px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 10px; }
+
   /* ─── APP ICONS ─── */
   .app-icon {
     width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
@@ -845,8 +876,22 @@
         <span style="color:var(--accent);font-size:.8rem;">✦</span> Key Insights
         <span style="margin-left:auto;font-size:.65rem;color:var(--muted);font-weight:400;letter-spacing:.03em;text-transform:none;">Auto-generated from dataset</span>
       </div>
-      <div id="keyInsights"></div>
+      <div class="insights-scroll-wrap">
+        <div id="keyInsights"></div>
+      </div>
       <!-- What to learn button removed -->
+    </div>
+  </div>
+
+  <!-- ①b Apps to Learn From -->
+  <div class="drag-section mb-16" draggable="true" data-id="learnFrom">
+    <div class="drag-handle"><span class="drag-handle-dots">⠿⠿</span> drag</div>
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+        <span style="color:var(--teal);font-size:.8rem;">🔬</span> Apps to Learn From
+        <span style="margin-left:auto;font-size:.65rem;color:var(--muted);font-weight:400;letter-spacing:.03em;text-transform:none;">Top 2 startup-relevant growth stories</span>
+      </div>
+      <div id="learnFromApps" style="margin-top:16px;"></div>
     </div>
   </div>
 
@@ -953,14 +998,14 @@
         <tr>
           <th onclick="sortTable('rank')">#<span class="sort-icon">↕</span></th>
           <th onclick="sortTable('name')">App<span class="sort-icon">↕</span></th>
-          <th onclick="sortTable('revenue')">Revenue ↕<span class="sort-icon"></span></th>
-          <th onclick="sortTable('downloads')">Downloads ↕<span class="sort-icon"></span></th>
-          <th onclick="sortTable('releaseDate')">Age<span class="sort-icon">↕</span></th>
-          <th>Company</th>
-          <th onclick="sortTable('publisherCountry')">Country<span class="sort-icon">↕</span></th>
-          <th>Employees</th>
-          <th>Valuation</th>
-          <th>Founded</th>
+          <th onclick="sortTable('revenue')">Revenue ↕<span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Sensor Tower</div><div class="src-item">AppMagic</div><div class="src-item">Appfigures</div></div></span></th>
+          <th onclick="sortTable('downloads')">Downloads ↕<span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Sensor Tower</div><div class="src-item">AppMagic</div><div class="src-item">Appfigures</div></div></span></th>
+          <th onclick="sortTable('releaseDate')">Age<span class="sort-icon">↕</span><span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">App Store (Apple)</div></div></span></th>
+          <th>Company<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Crunchbase</div><div class="src-item">LinkedIn</div><div class="src-item">Wellfound</div></div></span></th>
+          <th onclick="sortTable('publisherCountry')">Country<span class="sort-icon">↕</span><span class="src-info" onclick="event.stopPropagation()">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Sensor Tower</div><div class="src-item">App Store (Apple)</div></div></span></th>
+          <th>Employees<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">LinkedIn</div><div class="src-item">Wellfound</div><div class="src-item">Crunchbase</div></div></span></th>
+          <th>Valuation<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Crunchbase</div><div class="src-item">PitchBook</div><div class="src-item">Google Finance</div></div></span></th>
+          <th>Founded<span class="src-info">ⓘ<div class="src-info-popup"><div class="src-title">Data Sources</div><div class="src-item">Crunchbase</div><div class="src-item">LinkedIn</div></div></span></th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -1620,11 +1665,38 @@ function initCharts(data = currentData) {
     const metaApps = data.filter(a=>a.company && a.company.includes('Meta')).length;
     const metaDl = data.filter(a=>a.company && a.company.includes('Meta')).reduce((s,a)=>s+a.downloads,0);
     const metaDlPct = (metaDl/totalDl*100).toFixed(0);
+    // Small team analysis for social
+    const socialSmallTeams = data.filter(a => {
+      const emp = a.employees.replace(/[^0-9\-]/g,'');
+      const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
+      return maxEmp <= 500 && a.downloads >= 500000;
+    }).sort((a,b) => b.downloads - a.downloads);
+    const socialNewHighRankers = data.filter(a => a.releaseDate >= '2022-01-01' && a.rank <= 30).sort((a,b) => a.rank - b.rank);
+    const socialSmallList = socialSmallTeams.slice(0,4).map(a=>`${a.name} (${a.employees} emp)`).join(', ');
+    const socialNewList = socialNewHighRankers.slice(0,4).map(a=>`${a.name} (#${a.rank})`).join(', ');
 
     insightsHTML = `
     <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
       <div class="insights-col-header">Startup Angle</div>
+
+      ${mkLeft('🏆','David vs Goliath: Small Teams Win',
+        `${socialSmallTeams.length} apps with <500 employees reach 500K+ downloads`,
+        `Small teams are thriving: <strong>${socialSmallList}</strong>. In a category dominated by Meta's 78K employees, these lean teams prove that <strong>community depth beats engineering headcount.</strong> Each serves a specific identity or use case that giants can't replicate.`
+      )}
+      ${mkRight(
+        `Your Size Is Your Strategy`,
+        `Meta can't serve 1,000 communities deeply — but you can serve one. <em>Every successful small social app targets a tribe Meta treats as a demographic checkbox.</em> Build for that tribe obsessively: their language, their rituals, their inside jokes. <strong>When your 50-person team understands a community better than Meta's 78K, you win.</strong>`
+      )}
+
+      ${mkLeft('🚀','New Entrants Breaking Through',
+        `${socialNewHighRankers.length} apps launched since 2022 rank in the top 30`,
+        `Fresh entrants proving the market isn't locked: <strong>${socialNewList}</strong>. These apps broke through in 1–3 years by creating entirely new social interactions, not by copying existing ones.`
+      )}
+      ${mkRight(
+        `The Playbook: New Verb + New Tribe`,
+        `Every breakout social app invented both a <em>new action</em> and a <em>new audience.</em> BeReal invented "authenticity drops" for Gen Z. Locket invented "widget sharing" for close friends. <strong>Your startup advantage: you can bet everything on one radical interaction pattern.</strong> Meta can't — they have 2B users who expect stability.`
+      )}
 
       ${mkLeft('👥',"Meta's Iron Grip",
         `Meta owns ${metaApps} of the top 100 apps, capturing ${metaDlPct}% of downloads`,
@@ -1678,11 +1750,38 @@ function initCharts(data = currentData) {
     const msApps = data.filter(a=>a.publisher?.includes('Microsoft')).length;
     const googleMsDl = data.filter(a=>a.publisher==='Google'||a.publisher?.includes('Microsoft')).reduce((s,a)=>s+a.downloads,0);
     const bigTechPct = (googleMsDl/totalDl*100).toFixed(0);
+    // Small team analysis for productivity
+    const prodSmallTeams = data.filter(a => {
+      const emp = a.employees.replace(/[^0-9\-]/g,'');
+      const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
+      return maxEmp <= 500 && a.revenue >= 200000;
+    }).sort((a,b) => b.revenue - a.revenue);
+    const prodNewHighRankers = data.filter(a => a.releaseDate >= '2022-01-01' && a.rank <= 30).sort((a,b) => a.rank - b.rank);
+    const prodSmallList = prodSmallTeams.slice(0,4).map(a=>`${a.name} (${a.employees} emp, ${fmt(a.revenue,'rev')})`).join(', ');
+    const prodNewList = prodNewHighRankers.slice(0,4).map(a=>`${a.name} (#${a.rank})`).join(', ');
 
     insightsHTML = `
     <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
       <div class="insights-col-header">Startup Angle</div>
+
+      ${mkLeft('🏆','Small Teams Generating Big Revenue',
+        `${prodSmallTeams.length} apps with <500 employees earn $200K+ monthly`,
+        `Lean teams outperforming: <strong>${prodSmallList}</strong>. These companies prove that <strong>vertical focus + AI leverage</strong> lets small teams compete against Google and Microsoft's free bundled tools — by charging premium prices for specialized workflows.`
+      )}
+      ${mkRight(
+        `Vertical AI Is the $100B Play`,
+        `General AI is a 5-way war you can't win. But <em>vertical AI is wide open.</em> Take one painful workflow (legal contracts, tax prep, medical notes), automate it end-to-end, and charge 10× what a general tool costs. <strong>The apps above prove it: specificity commands premium pricing.</strong> A lawyer will pay $50/month for AI that knows case law. They won't pay $20 for ChatGPT.`
+      )}
+
+      ${mkLeft('🚀','New Apps Displacing Incumbents',
+        `${prodNewHighRankers.length} apps launched since 2022 rank in the top 30`,
+        `The productivity chart is being rewritten: <strong>${prodNewList}</strong>. AI-native apps are displacing decade-old office tools. For the first time, chatbots outrank email clients and calendars. <strong>The old guard is vulnerable.</strong>`
+      )}
+      ${mkRight(
+        `AI-Native Beats AI-Bolted`,
+        `Google and Microsoft are bolting AI onto 20-year-old products. <em>You can build AI-native from scratch.</em> The difference is fundamental: Copilot helps you write a Word doc. The winning startup makes the Word doc unnecessary. <strong>Don't enhance existing workflows — eliminate them entirely.</strong>`
+      )}
 
       ${mkLeft('🤖','The AI Assistant Wars',
         `Claude, ChatGPT, Gemini, Grok, Copilot — AI owns the top 10`,
@@ -1732,18 +1831,47 @@ function initCharts(data = currentData) {
 
   } else {
     // ─── PHOTO & VIDEO INSIGHTS (default) ───
+    // Find small-team high-performers
+    const smallTeamStars = data.filter(a => {
+      const emp = a.employees.replace(/[^0-9\-]/g,'');
+      const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
+      return maxEmp <= 500 && a.revenue >= 500000;
+    }).sort((a,b) => b.revenue - a.revenue);
+    const newHighRankers = data.filter(a => a.releaseDate >= '2022-01-01' && a.rank <= 30).sort((a,b) => a.rank - b.rank);
+    const revenuePerDl = [...data].filter(a=>a.downloads>0&&a.revenue>0).map(a=>({...a, rpd: a.revenue/a.downloads})).sort((a,b)=>b.rpd-a.rpd);
+    const smallTeamList = smallTeamStars.slice(0,5).map(a=>`${a.name} (${a.employees} emp, ${fmt(a.revenue,'rev')})`).join(', ');
+    const newHighList = newHighRankers.slice(0,5).map(a=>`${a.name} (#${a.rank}, launched ${a.releaseDate.slice(0,4)})`).join(', ');
+
     insightsHTML = `
     <div class="insights-table">
       <div class="insights-col-header">Market Signal</div>
       <div class="insights-col-header">Startup Angle</div>
 
-      ${mkLeft('📥','Download Concentration',
-        `The top 3 apps own ${top3Pct}% of all downloads`,
-        `<strong>${topDl.name}</strong> alone drives <strong>${topDlPct}%</strong> of total category downloads. ${top3Names[0]}, ${top3Names[1]}, and ${top3Names[2]} together capture <strong>${top3Pct}%</strong> — leaving the remaining 97 apps competing for the other half.`
+      ${mkLeft('🏆','Small Teams, Big Revenue',
+        `${smallTeamStars.length} apps with <500 employees generate $500K+ revenue`,
+        `Small teams are punching above their weight: <strong>${smallTeamList}</strong>. These companies prove you don't need thousands of engineers to build a top-100 revenue machine. The key pattern: <strong>narrow focus + premium pricing + AI leverage.</strong>`
       )}
       ${mkRight(
-        `Niche First, Scale Second`,
-        `Don't aim to be the next CapCut — ByteDance's distribution is not a replicable startup advantage. The real opportunity is in <em>ranks 20–100</em>: these apps have already proved consumer demand exists, but none have built an entrenched moat. Find the one whose audience is underserved, and out-execute before they notice you.`
+        `Lean Is Your Superpower`,
+        `Big companies waste 80% of engineering on coordination. A <em>10-person team with AI tools</em> can now ship what took 100 people in 2020. The apps above prove it: focus on one monetizable workflow, automate everything else, and <strong>charge premium prices to users who value craft over scale.</strong> Your cost structure IS your moat.`
+      )}
+
+      ${mkLeft('🚀','New Apps Breaking Through',
+        `${newHighRankers.length} apps launched since 2022 rank in the top 30`,
+        `The market is <em>not</em> locked down: <strong>${newHighList}</strong>. These newcomers broke into the top 30 within 1–3 years, proving that timing + AI + a fresh angle can beat decade-old incumbents. The window for new entrants is wide open.`
+      )}
+      ${mkRight(
+        `Speed Kills Incumbents`,
+        `Every app on that list shares one trait: <em>they shipped something incumbents couldn't or wouldn't.</em> CapCut won with auto-captions. Sora won with text-to-video. The lesson: <strong>find the one feature that requires a complete rearchitecture for incumbents</strong> — that's your 18-month head start. Don't iterate on existing features; invent new categories.`
+      )}
+
+      ${mkLeft('💰','Revenue Efficiency Gap',
+        `${topRev.name} earns ${rpdRatio}× more per download than ${topDl.name}`,
+        `<strong>${topRev.name}</strong> generates <strong>${fmt(topRev.revenue,'rev')}</strong> in revenue on <strong>${fmt(topRev.downloads)}</strong> downloads. The top revenue-per-download apps are: <strong>${revenuePerDl.slice(0,3).map(a=>a.name).join(', ')}</strong>. Subscription depth beats install breadth every time.`
+      )}
+      ${mkRight(
+        `Design for the 8% Who'll Pay`,
+        `Downloads are vanity; <em>ARPU is the business.</em> The best early-stage apps have 2–5M downloads and $8+ monthly ARPU — not 50M downloads at $0.40. Before you build a growth model, build your monetization model. Who are the 8% who will pay $9.99/month — and what do they specifically need? <strong>Design backwards from that person.</strong>`
       )}
 
       ${mkLeft('🤖','AI Saturation',
@@ -1755,13 +1883,13 @@ function initCharts(data = currentData) {
         `AI is table stakes, not a USP. The question is no longer <em>"should we use AI?"</em> — it's <em>"which AI interaction creates an involuntary reaction?"</em> Focus on the experience that makes someone physically turn to the person next to them and show their screen. <strong>That moment is the product.</strong>`
       )}
 
-      ${mkLeft('💰','Revenue Efficiency',
-        `${topRev.name} earns ${rpdRatio}× more per download than ${topDl.name}`,
-        `<strong>${topRev.name}</strong> generates <strong>${fmt(topRev.revenue,'rev')}</strong> in revenue on <strong>${fmt(topRev.downloads)}</strong> downloads. ${topDl.name} has more downloads but a fraction of the revenue-per-user. Subscription depth beats install breadth.`
+      ${mkLeft('📥','Download Concentration',
+        `The top 3 apps own ${top3Pct}% of all downloads`,
+        `<strong>${topDl.name}</strong> alone drives <strong>${topDlPct}%</strong> of total category downloads. ${top3Names[0]}, ${top3Names[1]}, and ${top3Names[2]} together capture <strong>${top3Pct}%</strong> — leaving the remaining 97 apps competing for the other half.`
       )}
       ${mkRight(
-        `Design for the 8% Who'll Pay`,
-        `Downloads are vanity; <em>ARPU is the business.</em> The best early-stage apps I back have 2–5M downloads and $8+ monthly ARPU — not 50M downloads at $0.40. Before you build a growth model, build your monetization model. Who are the 8% who will pay $9.99/month — and what do they specifically need? <strong>Design backwards from that person.</strong>`
+        `Niche First, Scale Second`,
+        `Don't aim to be the next CapCut — ByteDance's distribution is not a replicable startup advantage. The real opportunity is in <em>ranks 20–100</em>: these apps have already proved consumer demand exists, but none have built an entrenched moat. Find the one whose audience is underserved, and out-execute before they notice you.`
       )}
 
       ${mkLeft('🌏','Geographic Asymmetry',
@@ -1986,6 +2114,91 @@ function initProductTypes(data = currentData) {
     <div style="margin-top:14px;font-size:.68rem;color:var(--muted2);">
       ${sorted.length} product types identified across 100 apps
     </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  APPS TO LEARN FROM
+// ═══════════════════════════════════════════
+function initLearnFrom(data = currentData) {
+  const el = document.getElementById('learnFromApps');
+  if (!el) return;
+
+  // Score apps for "startup relevance":
+  // High rank + small team + high revenue + newer = better
+  const scored = data.map(a => {
+    const emp = a.employees.replace(/[^0-9\-]/g,'');
+    const maxEmp = emp.includes('-') ? parseInt(emp.split('-')[1]) : parseInt(emp);
+    const isSmall = maxEmp <= 1000;
+    const isNew = a.releaseDate >= '2018-01-01';
+    const hasRevenue = a.revenue >= 500000;
+    const goodRank = a.rank <= 50;
+    const age = new Date().getFullYear() - parseInt(a.releaseDate.slice(0,4));
+    const rpd = a.downloads > 0 ? a.revenue / a.downloads : 0;
+    // Composite score: prioritize small+new+high-performing
+    let score = 0;
+    if (isSmall) score += 30;
+    if (isNew) score += 20;
+    if (hasRevenue) score += 25;
+    if (goodRank) score += 15;
+    score += rpd * 10; // reward revenue efficiency
+    score += (isSmall && hasRevenue) ? 20 : 0; // bonus for small team with revenue
+    score += (isNew && goodRank) ? 15 : 0; // bonus for new and high ranking
+    score -= a.rank * 0.1; // slight preference for higher rank
+    return { ...a, score, maxEmp, age, rpd };
+  }).filter(a => a.maxEmp <= 2000 && a.score > 30) // filter out mega-corps
+    .sort((a, b) => b.score - a.score);
+
+  const top2 = scored.slice(0, 2);
+  if (top2.length < 2) { el.innerHTML = ''; return; }
+
+  const ANALYSES = {
+    photo_video: [
+      (a) => {
+        const reasons = [];
+        if (a.maxEmp <= 500) reasons.push(`operates with just <em>${a.employees}</em> employees — proving lean teams can dominate`);
+        if (a.releaseDate >= '2020-01-01') reasons.push(`launched in <em>${a.releaseDate.slice(0,4)}</em> and already ranks <strong>#${a.rank}</strong>`);
+        if (a.rpd > 1) reasons.push(`earns <strong>${fmt(a.revenue,'rev')}</strong> on ${fmt(a.downloads)} downloads — ${(a.rpd).toFixed(1)}× revenue-per-download`);
+        if (a.revenue >= 1000000) reasons.push(`generates <strong>${fmt(a.revenue,'rev')}/month</strong> revenue, outperforming many older incumbents`);
+        if (a.type === 'AI') reasons.push(`rides the <strong>AI wave</strong> — the fastest-growing segment in the category`);
+        return reasons.length > 0 ? reasons.join('. ') + '.' : `Ranks <strong>#${a.rank}</strong> with an efficient growth model that startups can replicate.`;
+      },
+    ],
+  };
+
+  const analyze = (a) => {
+    const fns = ANALYSES[currentCategory] || ANALYSES.photo_video;
+    return fns[0](a);
+  };
+
+  const colors = [
+    { badge: 'background:rgba(92,232,212,0.1);color:var(--teal);border:1px solid rgba(92,232,212,0.15);', val: 'var(--teal)' },
+    { badge: 'background:rgba(212,170,106,0.1);color:var(--gold);border:1px solid rgba(212,170,106,0.15);', val: 'var(--gold)' },
+  ];
+
+  el.innerHTML = `<div class="learn-from-grid">${top2.map((a, i) => `
+    <div class="learn-card">
+      <div class="learn-card-badge" style="${colors[i].badge}">${i === 0 ? '🥇 #1 to Study' : '🥈 #2 to Study'}</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+        ${getIconHtml(a.id, 'app-card-icon')}
+        <div>
+          <div class="learn-card-rank">Rank #${a.rank} in Top 100</div>
+          <div class="learn-card-name">${a.name}</div>
+          <div class="learn-card-dev">${COUNTRY_FLAGS[a.publisherCountry]||'🌍'} ${a.publisher} · ${a.publisherCountry}</div>
+        </div>
+      </div>
+      <div class="learn-card-metrics">
+        <div class="learn-card-metric"><div class="lcm-val" style="color:var(--accent)">${fmt(a.downloads)}</div><div class="lcm-lbl">Downloads</div></div>
+        <div class="learn-card-metric"><div class="lcm-val" style="color:var(--teal)">${fmt(a.revenue,'rev')}</div><div class="lcm-lbl">Revenue</div></div>
+        <div class="learn-card-metric"><div class="lcm-val" style="color:${colors[i].val}">${a.employees}</div><div class="lcm-lbl">Employees</div></div>
+        <div class="learn-card-metric"><div class="lcm-val" style="color:var(--muted)">${a.age}y</div><div class="lcm-lbl">Age</div></div>
+        <div class="learn-card-metric"><div class="lcm-val" style="color:var(--rose)">${a.founded}</div><div class="lcm-lbl">Founded</div></div>
+      </div>
+      <div class="learn-card-why">
+        <strong>Why study this app?</strong> ${analyze(a)}
+        <br><br>
+        <strong>Company:</strong> ${a.company} · <strong>Valuation:</strong> ${a.valuation}
+      </div>
+    </div>`).join('')}</div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -2411,6 +2624,7 @@ function switchCategory(cat, el) {
     initChartInsights(currentData);
     initStrategies();
     initProductTypes(currentData);
+    initLearnFrom(currentData);
     addCountTooltips();
     initFilters();
     switchTab('overview');
@@ -2746,6 +2960,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   initChartInsights();
   initStrategies();
   initProductTypes();
+  initLearnFrom();
   addCountTooltips();
   initFilters();
   renderTable();
