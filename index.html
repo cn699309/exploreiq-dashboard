@@ -964,7 +964,7 @@
 /* === END VISUAL ENHANCEMENTS === */
 
 
-/* === v22b OVERRIDE CSS === */
+/* === v22c OVERRIDE CSS === */
 .overview-kpi-row { display:none !important; }
 .hero-meta { flex-wrap:wrap; }
 .strategy-oneliner { font-size:1.875rem !important; font-weight:700 !important; line-height:1.35 !important; padding:14px 20px !important; margin-bottom:12px !important; color:#ffffff !important; }
@@ -3566,7 +3566,8 @@ function v22bHidePills(){
 }
 var v22bInsightOrder={
   "photo":["AI-powered","<50 employees earn","launched in 2023 or later","China places","top 3 apps own"],
-  "social":["launched 2023+","messaging apps in the top","Meta owns","<50 employees earn","Chinese apps","dating apps in the top"]
+  "social":["launched 2023+","messaging apps in the top","Meta owns","<50 employees earn","Chinese apps","dating apps in the top"],
+  "productivity":["<50 employees earn","AI owns the top","Google or Microsoft","screen-time apps","VPN apps","Chinese AI apps"]
 };
 function v22bDetectCategory(){
   var el=document.querySelector(".hero-title");
@@ -3574,6 +3575,7 @@ function v22bDetectCategory(){
   var t=el.textContent.toLowerCase();
   if(t.indexOf("photo")!==-1) return "photo";
   if(t.indexOf("social")!==-1) return "social";
+  if(t.indexOf("productivity")!==-1) return "productivity";
   return "";
 }
 function v22bReorderInsights(){
