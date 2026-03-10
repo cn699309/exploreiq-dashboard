@@ -834,6 +834,134 @@
 .overview-kpi-row > div:first-child[style*="linear-gradient"] { display: none !important; }
 /* === UI FIX: bigger section labels === */
 .insight-signal-title { font-size: 1.2rem !important; }
+
+/* === VISUAL ENHANCEMENTS === */
+
+/* Hero section subtle gradient overlay */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  left: 10%;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(56,189,248,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero > * { position: relative; z-index: 1; }
+
+/* Stat pills - subtle shimmer & glass effect */
+.stat-pill {
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+/* Overview KPI cards - glass morphism & icons */
+.overview-kpi {
+  position: relative;
+  backdrop-filter: blur(10px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+.overview-kpi:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+.overview-kpi::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  opacity: 0.04;
+  background-size: 50px;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+}
+.overview-kpi:nth-child(1)::after { content: '\1F465'; font-size: 48px; opacity: 0.06; top: 8px; right: 12px; }
+.overview-kpi:nth-child(2)::after { content: '\1F680'; font-size: 48px; opacity: 0.06; top: 8px; right: 12px; }
+.overview-kpi:nth-child(3)::after { content: '\1F4B0'; font-size: 48px; opacity: 0.06; top: 8px; right: 12px; }
+.overview-kpi:nth-child(4)::after { content: '\2728'; font-size: 48px; opacity: 0.06; top: 8px; right: 12px; }
+
+/* Card hover effects */
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+
+/* Card title decorative accent line */
+.card-title {
+  position: relative;
+}
+
+/* Insights table row hover */
+.insights-table tr:hover {
+  background: rgba(168,85,247,0.04);
+}
+
+/* Section dividers - subtle gradient line */
+.drag-section + .drag-section::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: 8px 0 16px;
+  background: linear-gradient(90deg, transparent, rgba(168,85,247,0.15), rgba(56,189,248,0.15), transparent);
+}
+
+/* Tab nav pill enhancement */
+.tab-btn.active {
+  box-shadow: 0 0 20px rgba(168,85,247,0.15);
+}
+
+/* Smooth entrance animation for cards */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.drag-section {
+  animation: fadeSlideUp 0.4s ease-out both;
+}
+.drag-section:nth-child(2) { animation-delay: 0.05s; }
+.drag-section:nth-child(3) { animation-delay: 0.1s; }
+.drag-section:nth-child(4) { animation-delay: 0.15s; }
+.drag-section:nth-child(5) { animation-delay: 0.2s; }
+.drag-section:nth-child(6) { animation-delay: 0.25s; }
+.drag-section:nth-child(7) { animation-delay: 0.3s; }
+.drag-section:nth-child(8) { animation-delay: 0.35s; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.25); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(168,85,247,0.4); }
+
+/* === END VISUAL ENHANCEMENTS === */
 </style>
 </head>
 <body>
@@ -2229,7 +2357,7 @@ function initChartInsights(data = currentData) {
     // ── Launch Year (Social) ──
     render('ins-launch', [
       ['📅', `${appListTip(post2022apps, 'Apps launched 2022+', a=>a.releaseDate.slice(0,4))} from 2022+ are in the top 100. <strong>Gen Z is actively rejecting</strong> Instagram-era social — new interaction patterns (authenticity, privacy, widgets) are winning.`],
-      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}). Social apps that last <strong>become identity infrastructure</strong> — your users should feel the app is part of who they are.`],
+      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}) — apps launched that year still in the Top 100 today. Social apps that last <strong>become identity infrastructure</strong> — your users should feel the app is part of who they are.`],
     ]);
     // ── Scale (Social) ──
     render('ins-scale', [
@@ -2263,7 +2391,7 @@ function initChartInsights(data = currentData) {
     // ── Launch Year (Productivity) ──
     render('ins-launch', [
       ['📅', `${appListTip(post2022apps, 'Apps launched 2022+', a=>a.releaseDate.slice(0,4))} from 2022+ cracked the top 100. <strong>The AI wave is real</strong> — but the next winners will win on workflow integration, not chatbot novelty.`],
-      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}). <strong>Habits beat tools</strong> — the apps that last become daily infrastructure, not occasional utilities.`],
+      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}) — apps launched that year still in the Top 100 today. <strong>Habits beat tools</strong> — the apps that last become daily infrastructure, not occasional utilities.`],
     ]);
     // ── Scale (Productivity) ──
     render('ins-scale', [
@@ -2290,13 +2418,13 @@ function initChartInsights(data = currentData) {
     ]);
     // ── Scatter ──
     render('ins-scatter', [
-      ['🎯', `${appListTip(highDlLowRev, 'High downloads, low revenue', a=>fmt(a.downloads))} have huge audiences but weak revenue. <strong>These are acquisition targets or partnership opportunities</strong> — they solved distribution, you solve monetization.`],
+      ['🎯', `${appListTip(highDlLowRev, 'High downloads, low revenue', a=>fmt(a.downloads))} have huge audiences but weak revenue. <strong>Most are big-tech strategic plays (Meta, Google, Amazon, ByteDance)</strong> that stay free on purpose — proof that millions of users want better tools but haven’t found an indie app worth paying for yet.`],
       ['🔥', `Only ${appListTip(top80rev, 'Apps earning 80% of revenue', a=>fmt(a.revenue,'rev'))} earn 80% of revenue. <strong>Build your paywall from day one</strong> — most founders add monetization too late and never recover.`],
     ]);
     // ── Launch Year ──
     render('ins-launch', [
       ['📅', `${appListTip(post2022apps, 'Apps launched 2022+', a=>a.releaseDate.slice(0,4))} from 2022+ cracked the top 100. <strong>You're not too late</strong> — new categories (AI, wellness) are still forming and don't have a clear winner yet.`],
-      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}). <strong>Build a daily habit, not a feature</strong> — that's what separates apps that last from apps that spike and die.`],
+      ['🏆', `The <strong>${peakY[0]}</strong> cohort has the most survivors (${peakY[1]}) — apps launched that year still in the Top 100 today. <strong>Build a daily habit, not a feature</strong> — that's what separates apps that last from apps that spike and die.`],
     ]);
     // ── Scale ──
     render('ins-scale', [
