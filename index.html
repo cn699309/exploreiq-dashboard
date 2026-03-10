@@ -1136,19 +1136,19 @@
         <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:1rem;">✨</div>
         <div>
           <div style="font-weight:700;font-size:.9rem;">Research AI Assistant</div>
-          <div style="font-size:.73rem;color:var(--rose);">● Coming Soon</div>
+          <div style="font-size:.73rem;color:#22c55e;">● Online</div>
         </div>
       </div>
       <div class="messages" id="messages" style="display:flex;align-items:center;justify-content:center;flex:1;">
         <div style="text-align:center;max-width:400px;padding:40px 20px;">
-          <div style="font-size:3rem;margin-bottom:16px;">🚧</div>
+          <div style="font-size:3rem;margin-bottom:16px;">✨</div>
           <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;color:var(--text);">Ask AI is Coming Soon</div>
           <div style="font-size:.85rem;color:var(--muted);line-height:1.6;">This feature is under development. Soon you'll be able to ask questions about the dataset, get AI-powered analysis, and explore market trends interactively.</div>
         </div>
       </div>
-      <div class="chat-input-area" style="opacity:0.4;pointer-events:none;">
+      <div class="chat-input-area">
         <textarea class="chat-input" id="chatInput" rows="2" placeholder="Ask AI — coming soon…" disabled></textarea>
-        <button class="send-btn" id="sendBtn" disabled>Send ↑</button>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send ↑</button>
       </div>
     </div>
     <!-- Sidebar -->
@@ -2778,15 +2778,7 @@ function openCard(rank) {
 // ═══════════════════════════════════════════
 //  AI CHAT
 // ═══════════════════════════════════════════
-function saveKey() {
-  const k = document.getElementById('apiKey').value;
-  sessionStorage.setItem('claude_key', k);
-}
-
-function loadKey() {
-  const k = sessionStorage.getItem('claude_key')||'';
-  document.getElementById('apiKey').value = k;
-}
+const VERCEL_API_URL = 'https://exploreiq-api.vercel.app/api/chat';
 
 function buildSystemPrompt() {
   const dataStr = JSON.stringify(currentData.map(a=>({
@@ -2820,92 +2812,58 @@ async function sendMessage() {
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
   if(!msg) return;
-  const key = document.getElementById('apiKey').value.trim();
-  if(!key) { alert('Please enter your Claude API key in the sidebar.'); return; }
-
   input.value = '';
   addMessage('user', msg);
-  chatHistory.push({role:'user', content:msg});
-
+  chatHistory.push({role:'user',content:msg});
   const btn = document.getElementById('sendBtn');
   btn.disabled = true;
-  const loadId = addMessage('ai', '<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', true);
-
+  const loadId = addMessage('ai','<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>',true);
   try {
-    const model = document.getElementById('modelSelect').value;
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(VERCEL_API_URL,{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 2000,
-        system: buildSystemPrompt(),
-        messages: chatHistory
-      })
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',systemPrompt:buildSystemPrompt(),messages:chatHistory})
     });
-    if(!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error?.message || `API error ${resp.status}`);
-    }
+    if(!resp.ok){const err=await resp.json();throw new Error(err.error||'API error '+resp.status);}
     const data = await resp.json();
     const reply = data.content[0].text;
-    chatHistory.push({role:'assistant', content:reply});
+    chatHistory.push({role:'assistant',content:reply});
     removeMessage(loadId);
-    addMessage('ai', formatMarkdown(reply));
+    addMessage('ai',formatMarkdown(reply));
   } catch(e) {
     removeMessage(loadId);
-    addMessage('ai', `❌ Error: ${e.message}`);
+    addMessage('ai',`❌ Error: ${e.message}`);
   }
   btn.disabled = false;
   input.focus();
 }
-
 async function generateInsights() {
-  const key = document.getElementById('apiKey').value.trim();
-  if(!key) { alert('Please enter your Claude API key in the sidebar.'); return; }
-  const btn = document.getElementById('genInsightBtn');
-  const spinner = document.getElementById('insightSpinner');
+  const btn = document.querySelector('.generate-btn');
   btn.disabled = true;
-  spinner.style.display = 'inline-block';
-  const output = document.getElementById('insightOutput');
-  output.innerHTML = '<span style="color:var(--accent)">Generating comprehensive market analysis…</span>';
-
+  btn.textContent = 'Generating...';
+  const prompt = 'Based on the iOS app market data provided in the system prompt, generate a comprehensive market analysis with: 1) Key market trends 2) Revenue opportunities 3) Competitive landscape insights 4) Strategic recommendations for a startup entering this space. Format with clear headers and bullet points.';
+  addMessage('user', prompt);
+  chatHistory.push({role:'user',content:prompt});
+  const loadId = addMessage('ai','<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>',true);
   try {
-    const model = document.getElementById('modelSelect').value;
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(VERCEL_API_URL,{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 2500,
-        system: buildSystemPrompt(),
-        messages:[{role:'user', content:'Generate a comprehensive strategic market analysis of the Photo & Video app category based on this dataset. Cover: (1) Market leadership and concentration, (2) Geographic dynamics and country competition, (3) AI disruption patterns, (4) Monetization efficiency leaders, (5) Rising challengers to watch, (6) Strategic white spaces. Be specific with data.'}]
-      })
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',systemPrompt:buildSystemPrompt(),messages:chatHistory})
     });
-    if(!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error?.message || `API error ${resp.status}`);
-    }
+    if(!resp.ok){const err=await resp.json();throw new Error(err.error||'API error '+resp.status);}
     const data = await resp.json();
-    output.innerHTML = formatMarkdown(data.content[0].text);
+    const reply = data.content[0].text;
+    chatHistory.push({role:'assistant',content:reply});
+    removeMessage(loadId);
+    addMessage('ai',formatMarkdown(reply));
   } catch(e) {
-    output.innerHTML = `<span style="color:#f87171">Error: ${e.message}</span>`;
+    removeMessage(loadId);
+    addMessage('ai',`❌ Error: ${e.message}`);
   }
   btn.disabled = false;
-  spinner.style.display = 'none';
+  btn.textContent = '✨ Generate Market Analysis';
 }
-
-let msgCounter = 0;
 function addMessage(role, html, loading=false) {
   const id = 'msg-'+(++msgCounter);
   const el = document.createElement('div');
@@ -3291,7 +3249,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   renderCards();
   fetchAppIcons(currentData);
   initQuickPrompts();
-  loadKey();
   initDraggable();
 });
 </script>
