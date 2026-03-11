@@ -3652,7 +3652,7 @@ function v22fFixScatterInsights(){
     });
   });
 }
-function v22gHideFoundedColumn(){var ths=document.querySelectorAll("table th");var colIdx=-1;for(var i=0;i<ths.length;i++){if(ths[i].textContent.indexOf("Founded")!==-1){colIdx=i;break;}}if(colIdx===-1)return;var rows=document.querySelectorAll("table tr");rows.forEach(function(row){var cells=row.querySelectorAll("th,td");if(cells[colIdx])cells[colIdx].style.display="none";});}
+function v22gHideFoundedColumn(){var ths=document.querySelectorAll("table th");var colIdx=-1;for(var i=0;i<ths.length;i++){if(ths[i].textContent.indexOf("Founded")!==-1){colIdx=i;break;}}if(colIdx!==-1){var rows=document.querySelectorAll("table tr");rows.forEach(function(row){var cells=row.querySelectorAll("th,td");if(cells[colIdx])cells[colIdx].style.display="none";});}document.querySelectorAll(".lcm-lbl").forEach(function(el){if(el.textContent.trim()==="Founded"){el.parentElement.style.display="none";}});}
 function v22bPostProcess(){
   v22bHidePills();
   v22bReorderInsights();
