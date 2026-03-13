@@ -996,6 +996,17 @@
 
 .drag-section { -webkit-user-drag: none !important; cursor: default !important; }
 .drag-section[draggable] { -webkit-user-drag: none !important; }
+
+.chat-msg { max-width:85%; padding:12px 16px; border-radius:12px; animation:fadeIn .3s ease; }
+.chat-user { align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+.chat-ai { align-self:flex-start; background:rgba(255,255,255,.06); border:1px solid var(--border); border-bottom-left-radius:4px; }
+.thinking { display:flex; gap:6px; padding:16px 20px; }
+.thinking .dot { width:8px; height:8px; border-radius:50%; background:var(--muted); animation:bounce .6s ease-in-out infinite; }
+.thinking .dot:nth-child(2) { animation-delay:.15s; }
+.thinking .dot:nth-child(3) { animation-delay:.3s; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes spin { to{transform:rotate(360deg)} }
 </style>
 </head>
 <body>
@@ -1070,7 +1081,7 @@
 <div class="tab-bar">
   <div class="tab active" onclick="switchTab('overview')">Overview</div>
   <div class="tab" onclick="switchTab('table')">Top 100 Apps</div>
-  <div class="tab" onclick="switchTab('ai')">Ask AI <span style="font-size:.6rem;color:var(--muted);margin-left:4px;">(coming soon)</span></div>
+  <div class="tab" onclick="switchTab('ai')">Ask AI </div>
 </div>
 
 <!-- ════════════════════════ PANELS ════════════════════════ -->
@@ -1289,15 +1300,11 @@
           <div style="font-size:.73rem;color:#22c55e;">● Online</div>
         </div>
       </div>
-      <div class="messages" id="messages" style="display:flex;align-items:center;justify-content:center;flex:1;">
-        <div style="text-align:center;max-width:400px;padding:40px 20px;">
-          <div style="font-size:3rem;margin-bottom:16px;">✨</div>
-          <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;color:var(--text);">Ask AI is Coming Soon</div>
-          <div style="font-size:.85rem;color:var(--muted);line-height:1.6;">This feature is under development. Soon you'll be able to ask questions about the dataset, get AI-powered analysis, and explore market trends interactively.</div>
-        </div>
+      <div class="messages" id="messages" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;">
+        <div class="ai-welcome" style="text-align:center;padding:30px 20px;color:var(--muted);margin:auto;"><div style="font-size:2rem;margin-bottom:10px;">✨</div><div style="font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:6px;">Research AI Assistant</div><div style="font-size:.82rem;line-height:1.6;">Ask questions about the dataset, explore market trends, or click a quick prompt.<br>Enter your Claude API key in the sidebar to begin.</div></div>
       </div>
       <div class="chat-input-area">
-        <textarea class="chat-input" id="chatInput" rows="2" placeholder="Ask AI — coming soon…" disabled></textarea>
+        <textarea class="chat-input" id="chatInput" rows="2" placeholder="Ask a question about the data…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
         <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send ↑</button>
       </div>
     </div>
@@ -2893,7 +2900,16 @@ document.addEventListener('click', function(e) {
 // ═══════════════════════════════════════════
 //  AI CHAT
 // ═══════════════════════════════════════════
-const VERCEL_API_URL = 'https://exploreiq-api.vercel.app/api/chat';
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+let chatHistory = [];
+let msgCounter = 0;
+
+function getApiKey() {
+  return (document.getElementById('apiKey') || {}).value || '';
+}
+function getModel() {
+  return (document.getElementById('modelSelect') || {}).value || 'claude-sonnet-4-20250514';
+}
 
 function buildSystemPrompt() {
   const dataStr = JSON.stringify(currentData.map(a=>({
@@ -2902,14 +2918,20 @@ function buildSystemPrompt() {
     company:a.company, founded:a.founded, employees:a.employees,
     valuation:a.valuation, type:a.type, story:a.story
   })), null, 0);
-  const catName = currentCategory === 'photo_video' ? 'Photo & Video' : 
-                     currentCategory === 'social' ? 'Social Networking' :
-                     currentCategory === 'productivity' ? 'Productivity' : 'Mobile App';
+  const catName = currentCategory === 'photo_video' ? 'Photo & Video' : currentCategory === 'social' ? 'Social Networking' : currentCategory === 'productivity' ? 'Productivity' : 'Mobile App';
+  
+  // Also gather existing insights from the overview
+  let insightEls = document.querySelectorAll('#panel-overview .insight-text, #panel-overview .card p, #panel-overview h2');
+  let insightTexts = [];
+  insightEls.forEach(el => { if(el.textContent.trim().length > 20) insightTexts.push(el.textContent.trim()); });
+  let insightsBlock = insightTexts.length > 0 ? '\n\nEXISTING MARKET INSIGHTS (from the Overview tab):\n' + insightTexts.slice(0,15).join('\n') : '';
+  
   return `You are a sharp, insight-driven market research analyst specializing in mobile app markets. You have deep expertise in the ${catName} app category.
 
 You have access to SensorTower data for the Top 100 iOS ${catName} apps in the US market for February 2026. Here is the complete dataset:
 
 ${dataStr}
+${insightsBlock}
 
 ANALYSIS GUIDELINES:
 - Be specific and data-driven. Cite actual numbers (downloads, revenue, company sizes, launch dates) from the dataset.
@@ -2921,106 +2943,158 @@ ANALYSIS GUIDELINES:
 - Note: Downloads and revenue figures are worldwide monthly estimates from SensorTower (Feb 2026).`;
 }
 
-let chatHistory = [];
+function addMessage(role, html, loading) {
+  const container = document.getElementById('messages');
+  const welcome = container.querySelector('.ai-welcome');
+  if(welcome) welcome.remove();
+  const id = 'msg-' + (++msgCounter);
+  const div = document.createElement('div');
+  div.id = id;
+  div.className = 'chat-msg ' + (role === 'user' ? 'chat-user' : 'chat-ai');
+  div.innerHTML = html;
+  if(loading) div.classList.add('loading');
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+
+function removeMessage(id) {
+  const el = document.getElementById(id);
+  if(el) el.remove();
+}
+
+function formatMarkdown(text) {
+  // Convert markdown-like formatting to HTML
+  let html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/```([\s\S]*?)```/g, '<pre style="background:rgba(0,0,0,.3);padding:12px;border-radius:8px;overflow-x:auto;font-size:.8rem;margin:8px 0;">$1</pre>')
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:4px;font-size:.85em;">$1</code>')
+    .replace(/^### (.+)$/gm, '<h4 style="margin:12px 0 4px;color:var(--accent);font-size:.9rem;">$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3 style="margin:14px 0 6px;color:var(--accent);font-size:1rem;">$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2 style="margin:16px 0 8px;color:var(--accent);font-size:1.1rem;">$1</h2>')
+    .replace(/^[\-\*] (.+)$/gm, '<div style="padding-left:16px;position:relative;margin:2px 0;"><span style="position:absolute;left:4px;">•</span>$1</div>')
+    .replace(/^(\d+)\. (.+)$/gm, '<div style="padding-left:20px;position:relative;margin:2px 0;"><span style="position:absolute;left:0;color:var(--accent);font-weight:600;">$1.</span>$2</div>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+  return '<div style="font-size:.85rem;line-height:1.7;color:var(--text);">' + html + '</div>';
+}
 
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
   if(!msg) return;
+  
+  const apiKey = getApiKey();
+  if(!apiKey) {
+    addMessage('ai', '<div style="color:#f87171;font-size:.85rem;">Please enter your Claude API key in the sidebar to use the AI assistant.</div>');
+    return;
+  }
+  
   input.value = '';
-  addMessage('user', msg);
-  chatHistory.push({role:'user',content:msg});
+  addMessage('user', '<div style="font-size:.85rem;">' + msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>');
+  chatHistory.push({role:'user', content:msg});
+  
   const btn = document.getElementById('sendBtn');
   btn.disabled = true;
-  const loadId = addMessage('ai','<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>',true);
+  const loadId = addMessage('ai', '<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', true);
+  
   try {
-    const resp = await fetch(VERCEL_API_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',systemPrompt:buildSystemPrompt(),messages:chatHistory})
+    const resp = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: getModel(),
+        max_tokens: 4096,
+        system: buildSystemPrompt(),
+        messages: chatHistory
+      })
     });
-    if(!resp.ok){const err=await resp.json();throw new Error(err.error||'API error '+resp.status);}
+    
+    if(!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + resp.status);
+    }
+    
     const data = await resp.json();
     const reply = data.content[0].text;
-    chatHistory.push({role:'assistant',content:reply});
+    chatHistory.push({role:'assistant', content:reply});
     removeMessage(loadId);
-    addMessage('ai',formatMarkdown(reply));
+    addMessage('ai', formatMarkdown(reply));
   } catch(e) {
     removeMessage(loadId);
-    addMessage('ai',`❌ Error: ${e.message}`);
+    addMessage('ai', '<div style="color:#f87171;font-size:.85rem;">Error: ' + e.message + '</div>');
   }
   btn.disabled = false;
   input.focus();
 }
+
 async function generateInsights() {
-  const btn = document.querySelector('.generate-btn');
+  const btn = document.getElementById('genInsightBtn');
+  if(!btn) return;
   btn.disabled = true;
-  btn.textContent = 'Generating...';
-  const prompt = 'Based on the iOS app market data provided in the system prompt, generate a comprehensive market analysis with: 1) Key market trends 2) Revenue opportunities 3) Competitive landscape insights 4) Strategic recommendations for a startup entering this space. Format with clear headers and bullet points.';
-  addMessage('user', prompt);
-  chatHistory.push({role:'user',content:prompt});
-  const loadId = addMessage('ai','<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>',true);
+  btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle;"></span>Generating...';
+  
+  const apiKey = getApiKey();
+  if(!apiKey) {
+    document.getElementById('insightOutput').innerHTML = '<div style="color:#f87171;">Please enter your Claude API key first.</div>';
+    btn.disabled = false;
+    btn.textContent = 'Generate Market Analysis';
+    return;
+  }
+  
+  const prompt = 'Based on the iOS app market data, generate a comprehensive but concise market analysis covering: 1) Key market trends 2) Revenue opportunities 3) Competitive landscape insights 4) Strategic recommendations for a startup entering this space. Use specific data points from the dataset.';
+  
   try {
-    const resp = await fetch(VERCEL_API_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',systemPrompt:buildSystemPrompt(),messages:chatHistory})
+    const resp = await fetch(ANTHROPIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: getModel(),
+        max_tokens: 4096,
+        system: buildSystemPrompt(),
+        messages: [{role:'user', content:prompt}]
+      })
     });
-    if(!resp.ok){const err=await resp.json();throw new Error(err.error||'API error '+resp.status);}
+    
+    if(!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + resp.status);
+    }
+    
     const data = await resp.json();
     const reply = data.content[0].text;
-    chatHistory.push({role:'assistant',content:reply});
-    removeMessage(loadId);
-    addMessage('ai',formatMarkdown(reply));
+    document.getElementById('insightOutput').innerHTML = formatMarkdown(reply);
   } catch(e) {
-    removeMessage(loadId);
-    addMessage('ai',`❌ Error: ${e.message}`);
+    document.getElementById('insightOutput').innerHTML = '<div style="color:#f87171;">Error: ' + e.message + '</div>';
   }
   btn.disabled = false;
-  btn.textContent = '✨ Generate Market Analysis';
-}
-function addMessage(role, html, loading=false) {
-  const id = 'msg-'+(++msgCounter);
-  const el = document.createElement('div');
-  el.className = `msg ${role}${loading?' loading':''}`;
-  el.id = id;
-  el.innerHTML = html;
-  document.getElementById('messages').appendChild(el);
-  el.scrollIntoView({behavior:'smooth'});
-  return id;
-}
-function removeMessage(id) {
-  document.getElementById(id)?.remove();
-}
-
-function formatMarkdown(text) {
-  return text
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/^### (.+)$/gm,'<div style="font-weight:800;color:var(--accent);margin:10px 0 4px;font-size:.9rem">$1</div>')
-    .replace(/^## (.+)$/gm,'<div style="font-weight:800;color:var(--text);margin:12px 0 6px;font-size:.95rem">$1</div>')
-    .replace(/^# (.+)$/gm,'<div style="font-weight:800;color:var(--accent);margin:14px 0 8px;font-size:1rem">$1</div>')
-    .replace(/^• (.+)$/gm,'<div style="display:flex;gap:8px;margin:3px 0"><span>•</span><span>$1</span></div>')
-    .replace(/^- (.+)$/gm,'<div style="display:flex;gap:8px;margin:3px 0"><span style="color:var(--accent)">›</span><span>$1</span></div>')
-    .replace(/^\d+\. (.+)$/gm,(m,p1,off,s)=>{
-      const n = s.slice(0,off).split('\n').filter(l=>/^\d+\./.test(l)).length+1;
-      return `<div style="display:flex;gap:8px;margin:3px 0"><span style="color:var(--accent);font-weight:700;min-width:18px">${n}.</span><span>${p1}</span></div>`;
-    })
-    .replace(/\n\n/g,'<br>')
-    .replace(/`(.+?)`/g,'<code style="background:var(--surface2);padding:2px 5px;border-radius:4px;font-size:.85em">$1</code>');
-}
-
-function initQuickPrompts() {
-  document.getElementById('quickPrompts').innerHTML = QUICK_PROMPTS.map(p=>
-    `<button class="prompt-chip" onclick="usePrompt(this.textContent)">${p}</button>`
-  ).join('');
+  btn.textContent = 'Generate Market Analysis';
 }
 
 function usePrompt(text) {
   const inp = document.getElementById('chatInput');
   inp.value = text;
   inp.focus();
+  sendMessage();
 }
+
+function saveKey() {
+  // Key is read directly from input when needed - no storage for security
+}
+
 
 // ═══════════════════════════════════════════
 //  TAB SWITCHING
